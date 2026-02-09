@@ -33,7 +33,7 @@ export async function renderToBlob(
 
   for (const layer of sorted) {
     const img = await loadImage(layer.svgPath);
-    ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+    ctx.drawImage(img, layer.offsetX, layer.offsetY, canvasWidth, canvasHeight);
   }
 
   return new Promise((resolve, reject) => {

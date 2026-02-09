@@ -3,6 +3,7 @@ import type {
   ResolvedLayer,
   PoseId,
   ExpressionId,
+  PartOffsets,
 } from '@/types/character';
 import { CATEGORIES } from '@/data/categories';
 import { PARTS } from '@/data/parts';
@@ -14,7 +15,8 @@ import { PARTS } from '@/data/parts';
 export function resolveLayers(
   selectedParts: SelectedParts,
   poseId: PoseId,
-  expressionId: ExpressionId
+  expressionId: ExpressionId,
+  partOffsets?: PartOffsets
 ): ResolvedLayer[] {
   const layers: ResolvedLayer[] = [];
 
@@ -35,10 +37,13 @@ export function resolveLayers(
     const svgPath = part.variants[variantKey];
     if (!svgPath) continue;
 
+    const offset = partOffsets?.[category.id];
     layers.push({
       categoryId: category.id,
       layerIndex: category.layerIndex,
       svgPath,
+      offsetX: offset?.x ?? 0,
+      offsetY: offset?.y ?? 0,
     });
   }
 

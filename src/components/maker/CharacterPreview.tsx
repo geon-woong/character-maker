@@ -12,11 +12,13 @@ interface CharacterPreviewProps {
 
 export function CharacterPreview({ className }: CharacterPreviewProps) {
   const selectedParts = useCharacterStore((s) => s.selectedParts);
+  const partOffsets = useCharacterStore((s) => s.partOffsets);
 
   const layers = resolveLayers(
     selectedParts,
     DEFAULT_POSE_ID,
-    DEFAULT_EXPRESSION_ID
+    DEFAULT_EXPRESSION_ID,
+    partOffsets
   );
 
   const hasAnySelection = layers.length > 0;
@@ -35,18 +37,29 @@ export function CharacterPreview({ className }: CharacterPreviewProps) {
         </div>
       )}
 
-      {layers.map((layer) => (
-        <Image
-          key={`${layer.categoryId}-${layer.svgPath}`}
-          src={layer.svgPath}
-          alt={layer.categoryId}
-          fill
-          className="object-contain"
-          style={{ zIndex: layer.layerIndex }}
-          sizes="(max-width: 768px) 100vw, 400px"
-          priority
-        />
-      ))}
+      {layers.map((layer) => {
+        const translateXPct = (layer.offsetX / CANVAS_WIDTH) * 100;
+        const translateYPct = (layer.offsetY / CANVAS_HEIGHT) * 100;
+
+        return (
+          <Image
+            key={`${layer.categoryId}-${layer.svgPath}`}
+            src={layer.svgPath}
+            alt={layer.categoryId}
+            fill
+            className="object-contain"
+            style={{
+              zIndex: layer.layerIndex,
+              transform:
+                layer.offsetX !== 0 || layer.offsetY !== 0
+                  ? `translate(${translateXPct}%, ${translateYPct}%)`
+                  : undefined,
+            }}
+            sizes="(max-width: 768px) 100vw, 400px"
+            priority
+          />
+        );
+      })}
     </div>
   );
 }

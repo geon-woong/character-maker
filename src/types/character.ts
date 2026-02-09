@@ -48,9 +48,19 @@ export type SelectedParts = Partial<Record<CategoryId, string>>; // categoryId â
 
 export type MakerStep = 'parts' | 'export';
 
+// ===== Part Offset =====
+export interface PartOffset {
+  readonly x: number;
+  readonly y: number;
+}
+
+export type PartOffsets = Partial<Record<CategoryId, PartOffset>>;
+
 // ===== Resolved Layer (for preview/export) =====
 export interface ResolvedLayer {
   readonly categoryId: CategoryId;
   readonly layerIndex: number;
   readonly svgPath: string;
+  readonly offsetX: number;
+  readonly offsetY: number;
 }

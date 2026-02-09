@@ -2,18 +2,21 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { CategoryId, MakerStep, SelectedParts } from '@/types/character';
+import type { CategoryId, MakerStep, SelectedParts, PartOffsets } from '@/types/character';
 import { PARTS } from '@/data/parts';
 import { CATEGORIES } from '@/data/categories';
+import { OFFSET_LIMIT } from '@/lib/utils/constants';
 
 interface CharacterState {
   step: MakerStep;
   selectedParts: SelectedParts;
   activeCategoryId: CategoryId;
+  partOffsets: PartOffsets;
 
   setStep: (step: MakerStep) => void;
   selectPart: (categoryId: CategoryId, partId: string) => void;
   setActiveCategory: (categoryId: CategoryId) => void;
+  setPartOffset: (categoryId: CategoryId, x: number, y: number) => void;
   randomizeAll: () => void;
   resetCharacter: () => void;
   isComplete: () => boolean;
@@ -25,6 +28,7 @@ export const useCharacterStore = create<CharacterState>()(
       step: 'parts',
       selectedParts: {},
       activeCategoryId: 'body',
+      partOffsets: {},
 
       setStep: (step) => set({ step }),
 
@@ -39,6 +43,17 @@ export const useCharacterStore = create<CharacterState>()(
       setActiveCategory: (categoryId) =>
         set({ activeCategoryId: categoryId }),
 
+      setPartOffset: (categoryId, x, y) => {
+        const clampedX = Math.max(-OFFSET_LIMIT, Math.min(OFFSET_LIMIT, x));
+        const clampedY = Math.max(-OFFSET_LIMIT, Math.min(OFFSET_LIMIT, y));
+        set((state) => ({
+          partOffsets: {
+            ...state.partOffsets,
+            [categoryId]: { x: clampedX, y: clampedY },
+          },
+        }));
+      },
+
       randomizeAll: () => {
         const randomized: SelectedParts = {};
         for (const category of CATEGORIES) {
@@ -51,7 +66,7 @@ export const useCharacterStore = create<CharacterState>()(
             }
           }
         }
-        set({ selectedParts: randomized });
+        set({ selectedParts: randomized, partOffsets: {} });
       },
 
       resetCharacter: () =>
@@ -59,6 +74,7 @@ export const useCharacterStore = create<CharacterState>()(
           step: 'parts',
           selectedParts: {},
           activeCategoryId: 'body',
+          partOffsets: {},
         }),
 
       isComplete: () => {
@@ -75,6 +91,7 @@ export const useCharacterStore = create<CharacterState>()(
         step: state.step,
         selectedParts: state.selectedParts,
         activeCategoryId: state.activeCategoryId,
+        partOffsets: state.partOffsets,
       }),
     }
   )

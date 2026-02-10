@@ -36,23 +36,20 @@ export async function renderToBlob(
     const img = await loadImage(layer.svgPath);
     const hasTransform = layer.offsetX || layer.offsetY || layer.rotate;
 
+    // src/lib/composer/canvas-renderer.ts
     if (layer.side) {
-      // Clip to left or right half
       ctx.save();
-      ctx.beginPath();
-      if (layer.side === 'left') {
-        ctx.rect(0, 0, canvasWidth / 2, canvasHeight);
-      } else {
-        ctx.rect(canvasWidth / 2, 0, canvasWidth / 2, canvasHeight);
-      }
-      ctx.clip();
-
       if (hasTransform) {
         ctx.translate(canvasWidth / 2 + layer.offsetX, canvasHeight / 2 + layer.offsetY);
         const rotateRad = (layer.rotate * Math.PI) / 180;
         ctx.rotate(rotateRad);
         ctx.translate(-canvasWidth / 2, -canvasHeight / 2);
       }
+
+      ctx.beginPath();
+      if (layer.side === 'left') ctx.rect(0, 0, canvasWidth / 2, canvasHeight);
+      else ctx.rect(canvasWidth / 2, 0, canvasWidth / 2, canvasHeight);
+      ctx.clip();
 
       ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
       ctx.restore();

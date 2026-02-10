@@ -18,7 +18,13 @@ export default function MakerPage() {
       {/* Top bar */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">캐릭터 만들기</h2>
-        <RandomizeButton />
+        <div className='flex gap-2'>
+          <RandomizeButton />
+          <Button variant="secondary" onClick={() => setIsEditOpen(true)} className="gap-2">
+            <Move className="h-4 w-4" />
+            편집모드
+          </Button>
+        </div>
       </div>
 
       {/* Main two-panel layout */}
@@ -26,15 +32,7 @@ export default function MakerPage() {
         {/* Preview first on mobile, second on desktop */}
         <div className="flex flex-col gap-4 lg:order-2">
           <CharacterPreview className="w-full lg:sticky lg:top-20" />
-          <div className="flex gap-2">
-            <Button
-              variant="secondary"
-              onClick={() => setIsEditOpen(true)}
-              className="gap-2"
-            >
-              <Move className="h-4 w-4" />
-              위치 편집
-            </Button>
+          <div>
             <ExportButton />
           </div>
         </div>

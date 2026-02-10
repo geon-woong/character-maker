@@ -13,7 +13,7 @@ import { CANVAS_WIDTH, CANVAS_HEIGHT, DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID } f
 export function ExportButton() {
   const [isExporting, setIsExporting] = useState(false);
   const selectedParts = useCharacterStore((s) => s.selectedParts);
-  const partOffsets = useCharacterStore((s) => s.partOffsets);
+  const partTransforms = useCharacterStore((s) => s.partTransforms);
   const isComplete = useCharacterStore((s) => s.isComplete);
 
   const handleExport = async () => {
@@ -28,7 +28,7 @@ export function ExportButton() {
         selectedParts,
         DEFAULT_POSE_ID,
         DEFAULT_EXPRESSION_ID,
-        partOffsets
+        partTransforms
       );
 
       const blob = await renderToBlob(layers, CANVAS_WIDTH, CANVAS_HEIGHT);

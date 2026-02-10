@@ -13,6 +13,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 
 /**
  * Render resolved layers onto a canvas and return a Blob (PNG).
+ * Layers with `side` are clipped to left/right half and transformed independently.
  */
 export async function renderToBlob(
   layers: ResolvedLayer[],
@@ -33,7 +34,41 @@ export async function renderToBlob(
 
   for (const layer of sorted) {
     const img = await loadImage(layer.svgPath);
-    ctx.drawImage(img, layer.offsetX, layer.offsetY, canvasWidth, canvasHeight);
+    const hasTransform = layer.offsetX || layer.offsetY || layer.skewX || layer.skewY;
+
+    if (layer.side) {
+      // Clip to left or right half
+      ctx.save();
+      ctx.beginPath();
+      if (layer.side === 'left') {
+        ctx.rect(0, 0, canvasWidth / 2, canvasHeight);
+      } else {
+        ctx.rect(canvasWidth / 2, 0, canvasWidth / 2, canvasHeight);
+      }
+      ctx.clip();
+
+      if (hasTransform) {
+        ctx.translate(canvasWidth / 2 + layer.offsetX, canvasHeight / 2 + layer.offsetY);
+        const skewXRad = (layer.skewX * Math.PI) / 180;
+        const skewYRad = (layer.skewY * Math.PI) / 180;
+        ctx.transform(1, Math.tan(skewYRad), Math.tan(skewXRad), 1, 0, 0);
+        ctx.translate(-canvasWidth / 2, -canvasHeight / 2);
+      }
+
+      ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+      ctx.restore();
+    } else if (hasTransform) {
+      ctx.save();
+      ctx.translate(canvasWidth / 2 + layer.offsetX, canvasHeight / 2 + layer.offsetY);
+      const skewXRad = (layer.skewX * Math.PI) / 180;
+      const skewYRad = (layer.skewY * Math.PI) / 180;
+      ctx.transform(1, Math.tan(skewYRad), Math.tan(skewXRad), 1, 0, 0);
+      ctx.translate(-canvasWidth / 2, -canvasHeight / 2);
+      ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+      ctx.restore();
+    } else {
+      ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+    }
   }
 
   return new Promise((resolve, reject) => {

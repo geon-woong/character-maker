@@ -2,21 +2,32 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { CategoryId, MakerStep, SelectedParts, PartOffsets } from '@/types/character';
+import type { CategoryId, MakerStep, SelectedParts, PartTransforms, PartTransform, PartSide } from '@/types/character';
+import { DEFAULT_PART_TRANSFORM } from '@/types/character';
 import { PARTS } from '@/data/parts';
 import { CATEGORIES } from '@/data/categories';
-import { OFFSET_LIMIT } from '@/lib/utils/constants';
+import { OFFSET_LIMIT, SKEW_LIMIT } from '@/lib/utils/constants';
+
+function clampTransform(t: PartTransform): PartTransform {
+  return {
+    x: Math.max(-OFFSET_LIMIT, Math.min(OFFSET_LIMIT, t.x)),
+    y: Math.max(-OFFSET_LIMIT, Math.min(OFFSET_LIMIT, t.y)),
+    skewX: Math.max(-SKEW_LIMIT, Math.min(SKEW_LIMIT, t.skewX)),
+    skewY: Math.max(-SKEW_LIMIT, Math.min(SKEW_LIMIT, t.skewY)),
+  };
+}
 
 interface CharacterState {
   step: MakerStep;
   selectedParts: SelectedParts;
   activeCategoryId: CategoryId;
-  partOffsets: PartOffsets;
+  partTransforms: PartTransforms;
 
   setStep: (step: MakerStep) => void;
   selectPart: (categoryId: CategoryId, partId: string) => void;
   setActiveCategory: (categoryId: CategoryId) => void;
-  setPartOffset: (categoryId: CategoryId, x: number, y: number) => void;
+  setPartTransform: (categoryId: CategoryId, side: PartSide, updates: Partial<PartTransform>) => void;
+  resetPartTransform: (categoryId: CategoryId) => void;
   randomizeAll: () => void;
   resetCharacter: () => void;
   isComplete: () => boolean;
@@ -28,7 +39,7 @@ export const useCharacterStore = create<CharacterState>()(
       step: 'parts',
       selectedParts: {},
       activeCategoryId: 'body',
-      partOffsets: {},
+      partTransforms: {},
 
       setStep: (step) => set({ step }),
 
@@ -43,15 +54,37 @@ export const useCharacterStore = create<CharacterState>()(
       setActiveCategory: (categoryId) =>
         set({ activeCategoryId: categoryId }),
 
-      setPartOffset: (categoryId, x, y) => {
-        const clampedX = Math.max(-OFFSET_LIMIT, Math.min(OFFSET_LIMIT, x));
-        const clampedY = Math.max(-OFFSET_LIMIT, Math.min(OFFSET_LIMIT, y));
-        set((state) => ({
-          partOffsets: {
-            ...state.partOffsets,
-            [categoryId]: { x: clampedX, y: clampedY },
-          },
-        }));
+      setPartTransform: (categoryId, side, updates) => {
+        set((state) => {
+          const current = state.partTransforms[categoryId] ?? {
+            left: DEFAULT_PART_TRANSFORM,
+            right: DEFAULT_PART_TRANSFORM,
+          };
+          const currentSide = current[side];
+          const merged: PartTransform = {
+            x: updates.x ?? currentSide.x,
+            y: updates.y ?? currentSide.y,
+            skewX: updates.skewX ?? currentSide.skewX,
+            skewY: updates.skewY ?? currentSide.skewY,
+          };
+          return {
+            partTransforms: {
+              ...state.partTransforms,
+              [categoryId]: {
+                ...current,
+                [side]: clampTransform(merged),
+              },
+            },
+          };
+        });
+      },
+
+      resetPartTransform: (categoryId) => {
+        set((state) => {
+          const next = { ...state.partTransforms };
+          delete next[categoryId];
+          return { partTransforms: next };
+        });
       },
 
       randomizeAll: () => {
@@ -66,7 +99,7 @@ export const useCharacterStore = create<CharacterState>()(
             }
           }
         }
-        set({ selectedParts: randomized, partOffsets: {} });
+        set({ selectedParts: randomized, partTransforms: {} });
       },
 
       resetCharacter: () =>
@@ -74,7 +107,7 @@ export const useCharacterStore = create<CharacterState>()(
           step: 'parts',
           selectedParts: {},
           activeCategoryId: 'body',
-          partOffsets: {},
+          partTransforms: {},
         }),
 
       isComplete: () => {
@@ -91,7 +124,7 @@ export const useCharacterStore = create<CharacterState>()(
         step: state.step,
         selectedParts: state.selectedParts,
         activeCategoryId: state.activeCategoryId,
-        partOffsets: state.partOffsets,
+        partTransforms: state.partTransforms,
       }),
     }
   )

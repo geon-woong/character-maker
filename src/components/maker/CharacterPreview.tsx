@@ -10,15 +10,27 @@ interface CharacterPreviewProps {
   className?: string;
 }
 
+function buildTransformStyle(layer: { offsetX: number; offsetY: number; skewX: number; skewY: number }) {
+  const parts: string[] = [];
+  if (layer.offsetX !== 0 || layer.offsetY !== 0) {
+    const tx = (layer.offsetX / CANVAS_WIDTH) * 100;
+    const ty = (layer.offsetY / CANVAS_HEIGHT) * 100;
+    parts.push(`translate(${tx}%, ${ty}%)`);
+  }
+  if (layer.skewX !== 0) parts.push(`skewX(${layer.skewX}deg)`);
+  if (layer.skewY !== 0) parts.push(`skewY(${layer.skewY}deg)`);
+  return parts.length > 0 ? parts.join(' ') : undefined;
+}
+
 export function CharacterPreview({ className }: CharacterPreviewProps) {
   const selectedParts = useCharacterStore((s) => s.selectedParts);
-  const partOffsets = useCharacterStore((s) => s.partOffsets);
+  const partTransforms = useCharacterStore((s) => s.partTransforms);
 
   const layers = resolveLayers(
     selectedParts,
     DEFAULT_POSE_ID,
     DEFAULT_EXPRESSION_ID,
-    partOffsets
+    partTransforms
   );
 
   const hasAnySelection = layers.length > 0;
@@ -38,22 +50,23 @@ export function CharacterPreview({ className }: CharacterPreviewProps) {
       )}
 
       {layers.map((layer) => {
-        const translateXPct = (layer.offsetX / CANVAS_WIDTH) * 100;
-        const translateYPct = (layer.offsetY / CANVAS_HEIGHT) * 100;
+        const clipPath = layer.side === 'left'
+          ? 'inset(0 50% 0 0)'
+          : layer.side === 'right'
+            ? 'inset(0 0 0 50%)'
+            : undefined;
 
         return (
           <Image
-            key={`${layer.categoryId}-${layer.svgPath}`}
+            key={`${layer.categoryId}-${layer.side ?? 'full'}-${layer.svgPath}`}
             src={layer.svgPath}
             alt={layer.categoryId}
             fill
             className="object-contain"
             style={{
               zIndex: layer.layerIndex,
-              transform:
-                layer.offsetX !== 0 || layer.offsetY !== 0
-                  ? `translate(${translateXPct}%, ${translateYPct}%)`
-                  : undefined,
+              clipPath,
+              transform: buildTransformStyle(layer),
             }}
             sizes="(max-width: 768px) 100vw, 400px"
             priority

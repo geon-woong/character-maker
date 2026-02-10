@@ -43,8 +43,8 @@ export function ExportButton() {
   const partTransforms = useCharacterStore((s) => s.partTransforms);
   const isComplete = useCharacterStore((s) => s.isComplete);
 
-  const activePreset = useMemo(
-    () => EXPORT_PRESETS.find((p) => p.id === presetId) ?? EXPORT_PRESETS[1],
+  const activePreset: ExportPreset = useMemo(
+    () => EXPORT_PRESETS.find((p) => p.id === presetId) ?? EXPORT_PRESETS[1]!,
     [presetId]
   );
 

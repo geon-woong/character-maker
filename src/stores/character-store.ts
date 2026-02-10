@@ -2,18 +2,17 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { CategoryId, MakerStep, SelectedParts, PartTransforms, PartTransform, PartSide } from '@/types/character';
-import { DEFAULT_PART_TRANSFORM } from '@/types/character';
+import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTransform } from '@/types/character';
+import { DEFAULT_SYMMETRIC_TRANSFORM } from '@/types/character';
 import { PARTS } from '@/data/parts';
 import { CATEGORIES } from '@/data/categories';
-import { OFFSET_LIMIT, SKEW_LIMIT } from '@/lib/utils/constants';
+import { OFFSET_LIMIT, ROTATION_LIMIT } from '@/lib/utils/constants';
 
-function clampTransform(t: PartTransform): PartTransform {
+function clampSymmetricTransform(t: SymmetricTransform): SymmetricTransform {
   return {
     x: Math.max(-OFFSET_LIMIT, Math.min(OFFSET_LIMIT, t.x)),
     y: Math.max(-OFFSET_LIMIT, Math.min(OFFSET_LIMIT, t.y)),
-    skewX: Math.max(-SKEW_LIMIT, Math.min(SKEW_LIMIT, t.skewX)),
-    skewY: Math.max(-SKEW_LIMIT, Math.min(SKEW_LIMIT, t.skewY)),
+    rotate: Math.max(-ROTATION_LIMIT, Math.min(ROTATION_LIMIT, t.rotate)),
   };
 }
 
@@ -26,7 +25,7 @@ interface CharacterState {
   setStep: (step: MakerStep) => void;
   selectPart: (categoryId: CategoryId, partId: string) => void;
   setActiveCategory: (categoryId: CategoryId) => void;
-  setPartTransform: (categoryId: CategoryId, side: PartSide, updates: Partial<PartTransform>) => void;
+  setSymmetricTransform: (categoryId: CategoryId, updates: Partial<SymmetricTransform>) => void;
   resetPartTransform: (categoryId: CategoryId) => void;
   randomizeAll: () => void;
   resetCharacter: () => void;
@@ -54,26 +53,18 @@ export const useCharacterStore = create<CharacterState>()(
       setActiveCategory: (categoryId) =>
         set({ activeCategoryId: categoryId }),
 
-      setPartTransform: (categoryId, side, updates) => {
+      setSymmetricTransform: (categoryId, updates) => {
         set((state) => {
-          const current = state.partTransforms[categoryId] ?? {
-            left: DEFAULT_PART_TRANSFORM,
-            right: DEFAULT_PART_TRANSFORM,
-          };
-          const currentSide = current[side];
-          const merged: PartTransform = {
-            x: updates.x ?? currentSide.x,
-            y: updates.y ?? currentSide.y,
-            skewX: updates.skewX ?? currentSide.skewX,
-            skewY: updates.skewY ?? currentSide.skewY,
+          const current = state.partTransforms[categoryId] ?? DEFAULT_SYMMETRIC_TRANSFORM;
+          const merged: SymmetricTransform = {
+            x: updates.x ?? current.x,
+            y: updates.y ?? current.y,
+            rotate: updates.rotate ?? current.rotate,
           };
           return {
             partTransforms: {
               ...state.partTransforms,
-              [categoryId]: {
-                ...current,
-                [side]: clampTransform(merged),
-              },
+              [categoryId]: clampSymmetricTransform(merged),
             },
           };
         });
@@ -119,7 +110,14 @@ export const useCharacterStore = create<CharacterState>()(
     }),
     {
       name: 'character-maker-state',
+      version: 2,
       storage: createJSONStorage(() => sessionStorage),
+      migrate: (persistedState, version) => {
+        if (version < 2) {
+          return { ...(persistedState as Record<string, unknown>), partTransforms: {} };
+        }
+        return persistedState as CharacterState;
+      },
       partialize: (state) => ({
         step: state.step,
         selectedParts: state.selectedParts,

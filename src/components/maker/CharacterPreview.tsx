@@ -10,15 +10,14 @@ interface CharacterPreviewProps {
   className?: string;
 }
 
-function buildTransformStyle(layer: { offsetX: number; offsetY: number; skewX: number; skewY: number }) {
+function buildTransformStyle(layer: { offsetX: number; offsetY: number; rotate: number }) {
   const parts: string[] = [];
   if (layer.offsetX !== 0 || layer.offsetY !== 0) {
     const tx = (layer.offsetX / CANVAS_WIDTH) * 100;
     const ty = (layer.offsetY / CANVAS_HEIGHT) * 100;
     parts.push(`translate(${tx}%, ${ty}%)`);
   }
-  if (layer.skewX !== 0) parts.push(`skewX(${layer.skewX}deg)`);
-  if (layer.skewY !== 0) parts.push(`skewY(${layer.skewY}deg)`);
+  if (layer.rotate !== 0) parts.push(`rotate(${layer.rotate}deg)`);
   return parts.length > 0 ? parts.join(' ') : undefined;
 }
 

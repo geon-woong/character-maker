@@ -51,21 +51,15 @@ export type MakerStep = 'parts' | 'export';
 // ===== Part Transform =====
 export type PartSide = 'left' | 'right';
 
-export interface PartTransform {
+export interface SymmetricTransform {
   readonly x: number;
   readonly y: number;
-  readonly skewX: number;
-  readonly skewY: number;
+  readonly rotate: number;
 }
 
-export interface SidedPartTransform {
-  readonly left: PartTransform;
-  readonly right: PartTransform;
-}
+export type PartTransforms = Partial<Record<CategoryId, SymmetricTransform>>;
 
-export type PartTransforms = Partial<Record<CategoryId, SidedPartTransform>>;
-
-export const DEFAULT_PART_TRANSFORM: PartTransform = { x: 0, y: 0, skewX: 0, skewY: 0 };
+export const DEFAULT_SYMMETRIC_TRANSFORM: SymmetricTransform = { x: 0, y: 0, rotate: 0 };
 
 // ===== Resolved Layer (for preview/export) =====
 export interface ResolvedLayer {
@@ -74,7 +68,6 @@ export interface ResolvedLayer {
   readonly svgPath: string;
   readonly offsetX: number;
   readonly offsetY: number;
-  readonly skewX: number;
-  readonly skewY: number;
+  readonly rotate: number;
   readonly side?: PartSide;
 }

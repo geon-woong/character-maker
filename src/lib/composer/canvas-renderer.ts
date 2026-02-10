@@ -34,7 +34,7 @@ export async function renderToBlob(
 
   for (const layer of sorted) {
     const img = await loadImage(layer.svgPath);
-    const hasTransform = layer.offsetX || layer.offsetY || layer.skewX || layer.skewY;
+    const hasTransform = layer.offsetX || layer.offsetY || layer.rotate;
 
     if (layer.side) {
       // Clip to left or right half
@@ -49,9 +49,8 @@ export async function renderToBlob(
 
       if (hasTransform) {
         ctx.translate(canvasWidth / 2 + layer.offsetX, canvasHeight / 2 + layer.offsetY);
-        const skewXRad = (layer.skewX * Math.PI) / 180;
-        const skewYRad = (layer.skewY * Math.PI) / 180;
-        ctx.transform(1, Math.tan(skewYRad), Math.tan(skewXRad), 1, 0, 0);
+        const rotateRad = (layer.rotate * Math.PI) / 180;
+        ctx.rotate(rotateRad);
         ctx.translate(-canvasWidth / 2, -canvasHeight / 2);
       }
 
@@ -60,9 +59,8 @@ export async function renderToBlob(
     } else if (hasTransform) {
       ctx.save();
       ctx.translate(canvasWidth / 2 + layer.offsetX, canvasHeight / 2 + layer.offsetY);
-      const skewXRad = (layer.skewX * Math.PI) / 180;
-      const skewYRad = (layer.skewY * Math.PI) / 180;
-      ctx.transform(1, Math.tan(skewYRad), Math.tan(skewXRad), 1, 0, 0);
+      const rotateRad = (layer.rotate * Math.PI) / 180;
+      ctx.rotate(rotateRad);
       ctx.translate(-canvasWidth / 2, -canvasHeight / 2);
       ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
       ctx.restore();

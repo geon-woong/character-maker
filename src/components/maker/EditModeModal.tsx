@@ -7,15 +7,14 @@ import { useCharacterStore } from '@/stores/character-store';
 import { resolveLayers } from '@/lib/composer/layer-order';
 import { CATEGORIES } from '@/data/categories';
 import { cn } from '@/lib/utils/cn';
-import type { PartSide } from '@/types/character';
-import { DEFAULT_PART_TRANSFORM } from '@/types/character';
+import { DEFAULT_SYMMETRIC_TRANSFORM } from '@/types/character';
 import {
   DEFAULT_POSE_ID,
   DEFAULT_EXPRESSION_ID,
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
   OFFSET_LIMIT,
-  SKEW_LIMIT,
+  ROTATION_LIMIT,
   EDITABLE_CATEGORIES,
 } from '@/lib/utils/constants';
 
@@ -27,36 +26,27 @@ const EDITABLE_CATEGORY_LIST = CATEGORIES.filter((c) =>
   EDITABLE_CATEGORIES.includes(c.id)
 );
 
-const SIDE_LABELS: Record<PartSide, string> = {
-  left: '왼쪽',
-  right: '오른쪽',
-};
-
-function buildPreviewTransform(layer: { offsetX: number; offsetY: number; skewX: number; skewY: number }) {
+function buildPreviewTransform(layer: { offsetX: number; offsetY: number; rotate: number }) {
   const parts: string[] = [];
   if (layer.offsetX !== 0 || layer.offsetY !== 0) {
     const tx = (layer.offsetX / CANVAS_WIDTH) * 100;
     const ty = (layer.offsetY / CANVAS_HEIGHT) * 100;
     parts.push(`translate(${tx}%, ${ty}%)`);
   }
-  if (layer.skewX !== 0) parts.push(`skewX(${layer.skewX}deg)`);
-  if (layer.skewY !== 0) parts.push(`skewY(${layer.skewY}deg)`);
+  if (layer.rotate !== 0) parts.push(`rotate(${layer.rotate}deg)`);
   return parts.length > 0 ? parts.join(' ') : undefined;
 }
 
 export function EditModeModal({ onClose }: EditModeModalProps) {
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
-  const setPartTransform = useCharacterStore((s) => s.setPartTransform);
+  const setSymmetricTransform = useCharacterStore((s) => s.setSymmetricTransform);
   const resetPartTransform = useCharacterStore((s) => s.resetPartTransform);
 
-  // 편집 가능한 카테고리 중 첫 번째로 초기화
   const [editCategoryId, setEditCategoryId] = useState(EDITABLE_CATEGORY_LIST[0]?.id ?? 'ears');
-  const [activeSide, setActiveSide] = useState<PartSide>('left');
 
   const editCategory = CATEGORIES.find((c) => c.id === editCategoryId);
-  const currentSidedTransform = partTransforms[editCategoryId];
-  const currentTransform = currentSidedTransform?.[activeSide] ?? DEFAULT_PART_TRANSFORM;
+  const currentTransform = partTransforms[editCategoryId] ?? DEFAULT_SYMMETRIC_TRANSFORM;
   const hasSelection = selectedParts[editCategoryId] != null;
 
   const layers = resolveLayers(
@@ -90,8 +80,7 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
   const isDefault =
     currentTransform.x === 0 &&
     currentTransform.y === 0 &&
-    currentTransform.skewX === 0 &&
-    currentTransform.skewY === 0;
+    currentTransform.rotate === 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
@@ -134,24 +123,6 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
               </button>
             );
           })}
-        </div>
-
-        {/* 좌/우 탭 */}
-        <div className="flex shrink-0 justify-center gap-2 px-4 py-2">
-          {(['left', 'right'] as const).map((side) => (
-            <button
-              key={side}
-              onClick={() => setActiveSide(side)}
-              className={cn(
-                'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
-                activeSide === side
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              )}
-            >
-              {SIDE_LABELS[side]}
-            </button>
-          ))}
         </div>
 
         {/* 프리뷰 */}
@@ -201,7 +172,7 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
                 min={-OFFSET_LIMIT}
                 max={OFFSET_LIMIT}
                 value={currentTransform.x}
-                onChange={(v) => setPartTransform(editCategoryId, activeSide, { x: v })}
+                onChange={(v) => setSymmetricTransform(editCategoryId, { x: v })}
               />
               {/* Y */}
               <SliderRow
@@ -209,31 +180,22 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
                 min={-OFFSET_LIMIT}
                 max={OFFSET_LIMIT}
                 value={currentTransform.y}
-                onChange={(v) => setPartTransform(editCategoryId, activeSide, { y: v })}
+                onChange={(v) => setSymmetricTransform(editCategoryId, { y: v })}
               />
-              {/* SkewX */}
+              {/* 회전 */}
               <SliderRow
-                label="기울기X"
-                min={-SKEW_LIMIT}
-                max={SKEW_LIMIT}
-                value={currentTransform.skewX}
-                onChange={(v) => setPartTransform(editCategoryId, activeSide, { skewX: v })}
-                unit="°"
-              />
-              {/* SkewY */}
-              <SliderRow
-                label="기울기Y"
-                min={-SKEW_LIMIT}
-                max={SKEW_LIMIT}
-                value={currentTransform.skewY}
-                onChange={(v) => setPartTransform(editCategoryId, activeSide, { skewY: v })}
+                label="회전"
+                min={-ROTATION_LIMIT}
+                max={ROTATION_LIMIT}
+                value={currentTransform.rotate}
+                onChange={(v) => setSymmetricTransform(editCategoryId, { rotate: v })}
                 unit="°"
               />
 
               {/* 리셋 */}
               <button
                 onClick={handleReset}
-                disabled={isDefault && !(currentSidedTransform)}
+                disabled={isDefault}
                 className="flex items-center justify-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none"
               >
                 <RotateCcw className="h-4 w-4" />

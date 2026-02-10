@@ -5,14 +5,13 @@ import type {
   ExpressionId,
   PartTransforms,
 } from '@/types/character';
-import { DEFAULT_PART_TRANSFORM } from '@/types/character';
 import { CATEGORIES } from '@/data/categories';
 import { PARTS } from '@/data/parts';
 import { EDITABLE_CATEGORIES } from '@/lib/utils/constants';
 
 /**
  * Given the current selections, resolve the SVG path for each layer.
- * Editable categories (ears, arms, legs) are split into left/right layers.
+ * Editable categories (ears, arms, legs) are split into symmetric left/right layers.
  * Returns layers sorted by layerIndex (ascending z-order).
  */
 export function resolveLayers(
@@ -44,27 +43,23 @@ export function resolveLayers(
     const transform = partTransforms?.[category.id];
 
     if (isEditable && transform) {
-      const left = transform.left ?? DEFAULT_PART_TRANSFORM;
-      const right = transform.right ?? DEFAULT_PART_TRANSFORM;
-
+      // Symmetric mirroring: X and rotate are inverted for right side
       layers.push({
         categoryId: category.id,
         layerIndex: category.layerIndex,
         svgPath,
-        offsetX: left.x,
-        offsetY: left.y,
-        skewX: left.skewX,
-        skewY: left.skewY,
+        offsetX: transform.x,
+        offsetY: transform.y,
+        rotate: transform.rotate,
         side: 'left',
       });
       layers.push({
         categoryId: category.id,
         layerIndex: category.layerIndex,
         svgPath,
-        offsetX: right.x,
-        offsetY: right.y,
-        skewX: right.skewX,
-        skewY: right.skewY,
+        offsetX: -transform.x,
+        offsetY: transform.y,
+        rotate: -transform.rotate,
         side: 'right',
       });
     } else {
@@ -74,9 +69,7 @@ export function resolveLayers(
         svgPath,
         offsetX: 0,
         offsetY: 0,
-        skewX: 0,
-        skewY: 0,
-        side: isEditable ? undefined : undefined,
+        rotate: 0,
       });
     }
   }

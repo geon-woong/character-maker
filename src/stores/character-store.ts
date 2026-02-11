@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTransform } from '@/types/character';
+import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTransform, PartColors } from '@/types/character';
 import { DEFAULT_SYMMETRIC_TRANSFORM } from '@/types/character';
 import { PARTS } from '@/data/parts';
 import { CATEGORIES } from '@/data/categories';
@@ -21,12 +21,17 @@ interface CharacterState {
   selectedParts: SelectedParts;
   activeCategoryId: CategoryId;
   partTransforms: PartTransforms;
+  partColors: PartColors;
 
   setStep: (step: MakerStep) => void;
   selectPart: (categoryId: CategoryId, partId: string) => void;
   setActiveCategory: (categoryId: CategoryId) => void;
   setSymmetricTransform: (categoryId: CategoryId, updates: Partial<SymmetricTransform>) => void;
   resetPartTransform: (categoryId: CategoryId) => void;
+  setPartColor: (categoryId: CategoryId, fill: string) => void;
+  applyColorToAll: (fill: string) => void;
+  resetPartColor: (categoryId: CategoryId) => void;
+  resetAllColors: () => void;
   randomizeAll: () => void;
   resetCharacter: () => void;
   isComplete: () => boolean;
@@ -39,6 +44,7 @@ export const useCharacterStore = create<CharacterState>()(
       selectedParts: {},
       activeCategoryId: 'body',
       partTransforms: {},
+      partColors: {},
 
       setStep: (step) => set({ step }),
 
@@ -78,6 +84,33 @@ export const useCharacterStore = create<CharacterState>()(
         });
       },
 
+      setPartColor: (categoryId, fill) =>
+        set((state) => ({
+          partColors: {
+            ...state.partColors,
+            [categoryId]: fill,
+          },
+        })),
+
+      applyColorToAll: (fill) =>
+        set(() => {
+          const allColors: PartColors = {};
+          for (const category of CATEGORIES) {
+            allColors[category.id] = fill;
+          }
+          return { partColors: allColors };
+        }),
+
+      resetPartColor: (categoryId) =>
+        set((state) => {
+          const next = { ...state.partColors };
+          delete next[categoryId];
+          return { partColors: next };
+        }),
+
+      resetAllColors: () =>
+        set({ partColors: {} }),
+
       randomizeAll: () => {
         const randomized: SelectedParts = {};
         for (const category of CATEGORIES) {
@@ -90,7 +123,7 @@ export const useCharacterStore = create<CharacterState>()(
             }
           }
         }
-        set({ selectedParts: randomized, partTransforms: {} });
+        set({ selectedParts: randomized, partTransforms: {}, partColors: {} });
       },
 
       resetCharacter: () =>
@@ -99,6 +132,7 @@ export const useCharacterStore = create<CharacterState>()(
           selectedParts: {},
           activeCategoryId: 'body',
           partTransforms: {},
+          partColors: {},
         }),
 
       isComplete: () => {
@@ -110,11 +144,14 @@ export const useCharacterStore = create<CharacterState>()(
     }),
     {
       name: 'character-maker-state',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => sessionStorage),
       migrate: (persistedState, version) => {
         if (version < 2) {
-          return { ...(persistedState as Record<string, unknown>), partTransforms: {} };
+          return { ...(persistedState as Record<string, unknown>), partTransforms: {}, partColors: {} };
+        }
+        if (version < 3) {
+          return { ...(persistedState as Record<string, unknown>), partColors: {} };
         }
         return persistedState as CharacterState;
       },
@@ -123,6 +160,7 @@ export const useCharacterStore = create<CharacterState>()(
         selectedParts: state.selectedParts,
         activeCategoryId: state.activeCategoryId,
         partTransforms: state.partTransforms,
+        partColors: state.partColors,
       }),
     }
   )

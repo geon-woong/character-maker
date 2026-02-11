@@ -61,6 +61,10 @@ export type PartTransforms = Partial<Record<CategoryId, SymmetricTransform>>;
 
 export const DEFAULT_SYMMETRIC_TRANSFORM: SymmetricTransform = { x: 0, y: 0, rotate: 0 };
 
+// ===== Part Color =====
+export type PartColors = Partial<Record<CategoryId, string>>; // categoryId → hex fill color
+export const DEFAULT_FILL_COLOR = '#ffffff';
+
 // ===== Resolved Layer (for preview/export) =====
 export interface ResolvedLayer {
   readonly categoryId: CategoryId;

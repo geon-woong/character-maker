@@ -8,6 +8,7 @@ import { CharacterPreview } from '@/components/maker/CharacterPreview';
 import { RandomizeButton } from '@/components/maker/RandomizeButton';
 import { ExportButton } from '@/components/maker/ExportButton';
 import { EditModeModal } from '@/components/maker/EditModeModal';
+import { ColorPalette } from '@/components/maker/ColorPalette';
 import { Button } from '@/components/ui/Button';
 
 export default function MakerPage() {
@@ -41,6 +42,7 @@ export default function MakerPage() {
         <div className="flex flex-col gap-4 lg:order-1">
           <PartCategoryTabs />
           <PartGrid />
+          <ColorPalette />
         </div>
       </div>
 

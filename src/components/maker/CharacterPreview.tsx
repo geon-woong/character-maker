@@ -4,6 +4,8 @@ import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useCharacterStore } from '@/stores/character-store';
 import { resolveLayers } from '@/lib/composer/layer-order';
+import { applyColorsToLayers } from '@/lib/color/apply-colors';
+import type { ResolvedLayer } from '@/types/character';
 import { DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID, CANVAS_WIDTH, CANVAS_HEIGHT } from '@/lib/utils/constants';
 import { cn } from '@/lib/utils/cn';
 
@@ -28,6 +30,7 @@ function buildTransformStyle(
 export function CharacterPreview({ className }: CharacterPreviewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [previewWidth, setPreviewWidth] = useState<number | null>(null);
+  const [coloredLayers, setColoredLayers] = useState<ResolvedLayer[]>([]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -44,15 +47,31 @@ export function CharacterPreview({ className }: CharacterPreviewProps) {
 
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
+  const partColors = useCharacterStore((s) => s.partColors);
 
-  const layers = resolveLayers(
-    selectedParts,
-    DEFAULT_POSE_ID,
-    DEFAULT_EXPRESSION_ID,
-    partTransforms
+  const baseLayers = useMemo(
+    () => resolveLayers(selectedParts, DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID, partTransforms),
+    [selectedParts, partTransforms]
   );
 
-  const hasAnySelection = layers.length > 0;
+  useEffect(() => {
+    let cancelled = false;
+
+    if (baseLayers.length === 0) {
+      setColoredLayers([]);
+      return;
+    }
+
+    applyColorsToLayers(baseLayers, partColors).then((result) => {
+      if (!cancelled) setColoredLayers(result);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [baseLayers, partColors]);
+
+  const hasAnySelection = coloredLayers.length > 0;
   const scale = useMemo(() => {
     if (!previewWidth) return 1;
     return previewWidth / CANVAS_WIDTH;
@@ -71,16 +90,17 @@ export function CharacterPreview({ className }: CharacterPreviewProps) {
           </div>
         )}
 
-        {layers.map((layer) => {
+        {coloredLayers.map((layer) => {
           const clipPath =
             layer.side === 'left' ? 'inset(0 50% 0 0)' : layer.side === 'right' ? 'inset(0 0 0 50%)' : undefined;
 
           return (
             <Image
-              key={`${layer.categoryId}-${layer.side ?? 'full'}-${layer.svgPath}`}
+              key={`${layer.categoryId}-${layer.side ?? 'full'}`}
               src={layer.svgPath}
               alt={layer.categoryId}
               fill
+              unoptimized
               className="object-contain"
               style={{
                 zIndex: layer.layerIndex,

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { useCharacterStore } from '@/stores/character-store';
 import { resolveLayers } from '@/lib/composer/layer-order';
+import { applyColorsToLayers } from '@/lib/color/apply-colors';
 import { renderToBlob } from '@/lib/composer/canvas-renderer';
 import { downloadBlob } from '@/lib/export/download-manager';
 import {
@@ -41,6 +42,7 @@ export function ExportButton() {
   const [presetId, setPresetId] = useState<ExportPresetId>('standard');
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
+  const partColors = useCharacterStore((s) => s.partColors);
   const isComplete = useCharacterStore((s) => s.isComplete);
 
   const activePreset: ExportPreset = useMemo(
@@ -56,12 +58,13 @@ export function ExportButton() {
 
     setIsExporting(true);
     try {
-      const layers = resolveLayers(
+      const baseLayers = resolveLayers(
         selectedParts,
         DEFAULT_POSE_ID,
         DEFAULT_EXPRESSION_ID,
         partTransforms
       );
+      const layers = await applyColorsToLayers(baseLayers, partColors);
 
       const blob = await renderToBlob(
         layers,

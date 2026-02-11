@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { X, RotateCcw } from 'lucide-react';
 import { useCharacterStore } from '@/stores/character-store';
 import { resolveLayers } from '@/lib/composer/layer-order';
+import { applyColorsToLayers } from '@/lib/color/apply-colors';
 import { CATEGORIES } from '@/data/categories';
 import { cn } from '@/lib/utils/cn';
+import type { ResolvedLayer } from '@/types/character';
 import { DEFAULT_SYMMETRIC_TRANSFORM } from '@/types/character';
 import {
   DEFAULT_POSE_ID,
@@ -40,21 +42,38 @@ function buildPreviewTransform(layer: { offsetX: number; offsetY: number; rotate
 export function EditModeModal({ onClose }: EditModeModalProps) {
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
+  const partColors = useCharacterStore((s) => s.partColors);
   const setSymmetricTransform = useCharacterStore((s) => s.setSymmetricTransform);
   const resetPartTransform = useCharacterStore((s) => s.resetPartTransform);
 
   const [editCategoryId, setEditCategoryId] = useState(EDITABLE_CATEGORY_LIST[0]?.id ?? 'ears');
+  const [coloredLayers, setColoredLayers] = useState<ResolvedLayer[]>([]);
 
   const editCategory = CATEGORIES.find((c) => c.id === editCategoryId);
   const currentTransform = partTransforms[editCategoryId] ?? DEFAULT_SYMMETRIC_TRANSFORM;
   const hasSelection = selectedParts[editCategoryId] != null;
 
-  const layers = resolveLayers(
-    selectedParts,
-    DEFAULT_POSE_ID,
-    DEFAULT_EXPRESSION_ID,
-    partTransforms
+  const baseLayers = useMemo(
+    () => resolveLayers(selectedParts, DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID, partTransforms),
+    [selectedParts, partTransforms]
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (baseLayers.length === 0) {
+      setColoredLayers([]);
+      return;
+    }
+
+    applyColorsToLayers(baseLayers, partColors).then((result) => {
+      if (!cancelled) setColoredLayers(result);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [baseLayers, partColors]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -131,7 +150,7 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
             className="relative w-full max-w-[280px] rounded-xl border border-gray-200 bg-gray-50 overflow-hidden"
             style={{ aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}` }}
           >
-            {layers.map((layer) => {
+            {coloredLayers.map((layer) => {
               const clipPath = layer.side === 'left'
                 ? 'inset(0 50% 0 0)'
                 : layer.side === 'right'
@@ -140,10 +159,11 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
 
               return (
                 <Image
-                  key={`${layer.categoryId}-${layer.side ?? 'full'}-${layer.svgPath}`}
+                  key={`${layer.categoryId}-${layer.side ?? 'full'}`}
                   src={layer.svgPath}
                   alt={layer.categoryId}
                   fill
+                  unoptimized
                   className="object-contain"
                   style={{
                     zIndex: layer.layerIndex,

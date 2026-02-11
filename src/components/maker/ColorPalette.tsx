@@ -19,42 +19,47 @@ export function ColorPalette() {
   const category = CATEGORIES.find((c) => c.id === activeCategoryId);
   const isColorable = COLORABLE_CATEGORIES.includes(activeCategoryId);
 
-  const currentColor = useMemo(
-    () => partColors[activeCategoryId] ?? { fill: DEFAULT_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR },
+  const currentFill = useMemo(
+    () => partColors[activeCategoryId]?.fill ?? DEFAULT_FILL_COLOR,
+    [partColors, activeCategoryId]
+  );
+
+  const currentStroke = useMemo(
+    () => partColors[activeCategoryId]?.stroke ?? DEFAULT_STROKE_COLOR,
     [partColors, activeCategoryId]
   );
 
   const handleFillPreset = useCallback(
     (fill: string) => {
-      setPartColor(activeCategoryId, { ...currentColor, fill });
+      setPartColor(activeCategoryId, { fill, stroke: currentStroke });
     },
-    [activeCategoryId, currentColor, setPartColor]
+    [activeCategoryId, currentStroke, setPartColor]
   );
 
   const handleStrokePreset = useCallback(
     (stroke: string) => {
-      setPartColor(activeCategoryId, { ...currentColor, stroke });
+      setPartColor(activeCategoryId, { fill: currentFill, stroke });
     },
-    [activeCategoryId, currentColor, setPartColor]
+    [activeCategoryId, currentFill, setPartColor]
   );
 
   const handleCustomFill = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setPartColor(activeCategoryId, { ...currentColor, fill: e.target.value });
+      setPartColor(activeCategoryId, { fill: e.target.value, stroke: currentStroke });
     },
-    [activeCategoryId, currentColor, setPartColor]
+    [activeCategoryId, currentStroke, setPartColor]
   );
 
   const handleCustomStroke = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setPartColor(activeCategoryId, { ...currentColor, stroke: e.target.value });
+      setPartColor(activeCategoryId, { fill: currentFill, stroke: e.target.value });
     },
-    [activeCategoryId, currentColor, setPartColor]
+    [activeCategoryId, currentFill, setPartColor]
   );
 
   const handleApplyToAll = useCallback(() => {
-    applyColorToAll(currentColor);
-  }, [currentColor, applyColorToAll]);
+    applyColorToAll({ fill: currentFill, stroke: currentStroke });
+  }, [currentFill, currentStroke, applyColorToAll]);
 
   const handleReset = useCallback(() => {
     resetPartColor(activeCategoryId);
@@ -72,12 +77,12 @@ export function ColorPalette() {
         <div className="flex items-center gap-1">
           <div
             className="h-6 w-6 rounded-full border border-gray-300"
-            style={{ backgroundColor: currentColor.fill }}
+            style={{ backgroundColor: currentFill }}
             title="채우기"
           />
           <div
             className="h-6 w-6 rounded-full border border-gray-300"
-            style={{ backgroundColor: currentColor.stroke }}
+            style={{ backgroundColor: currentStroke }}
             title="선"
           />
         </div>
@@ -93,7 +98,7 @@ export function ColorPalette() {
               onClick={() => handleFillPreset(preset.color)}
               className={cn(
                 'h-8 w-8 rounded-full border-2 transition-all',
-                currentColor.fill.toLowerCase() === preset.color.toLowerCase()
+                currentFill.toLowerCase() === preset.color.toLowerCase()
                   ? 'border-indigo-500 ring-2 ring-indigo-200'
                   : 'border-gray-200 hover:border-gray-400'
               )}
@@ -108,7 +113,7 @@ export function ColorPalette() {
             <span className="text-xs text-gray-400">+</span>
             <input
               type="color"
-              value={currentColor.fill}
+              value={currentFill}
               onChange={handleCustomFill}
               className="absolute inset-0 cursor-pointer opacity-0"
             />
@@ -126,7 +131,7 @@ export function ColorPalette() {
               onClick={() => handleStrokePreset(preset.color)}
               className={cn(
                 'h-8 w-8 rounded-full border-2 transition-all',
-                currentColor.stroke.toLowerCase() === preset.color.toLowerCase()
+                currentStroke.toLowerCase() === preset.color.toLowerCase()
                   ? 'border-indigo-500 ring-2 ring-indigo-200'
                   : 'border-gray-200 hover:border-gray-400'
               )}
@@ -141,7 +146,7 @@ export function ColorPalette() {
             <span className="text-xs text-gray-400">+</span>
             <input
               type="color"
-              value={currentColor.stroke}
+              value={currentStroke}
               onChange={handleCustomStroke}
               className="absolute inset-0 cursor-pointer opacity-0"
             />

@@ -18,6 +18,7 @@ import {
   OFFSET_LIMIT,
   ROTATION_LIMIT,
   EDITABLE_CATEGORIES,
+  X_LOCKED_CATEGORIES,
 } from '@/lib/utils/constants';
 
 interface EditModeModalProps {
@@ -186,14 +187,16 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
             </p>
           ) : (
             <div className="flex flex-col gap-3">
-              {/* X */}
-              <SliderRow
-                label="X"
-                min={-OFFSET_LIMIT}
-                max={OFFSET_LIMIT}
-                value={currentTransform.x}
-                onChange={(v) => setSymmetricTransform(editCategoryId, { x: v })}
-              />
+              {/* X (중앙 정렬 부위는 잠금) */}
+              {!X_LOCKED_CATEGORIES.includes(editCategoryId) && (
+                <SliderRow
+                  label="X"
+                  min={-OFFSET_LIMIT}
+                  max={OFFSET_LIMIT}
+                  value={currentTransform.x}
+                  onChange={(v) => setSymmetricTransform(editCategoryId, { x: v })}
+                />
+              )}
               {/* Y */}
               <SliderRow
                 label="Y"

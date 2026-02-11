@@ -23,7 +23,7 @@ function resolveColor(
 
   if (categoryId === 'mouth') {
     const bodyColor = partColors[MOUTH_FOLLOWS] ?? DEFAULT_PART_COLOR;
-    return { fill: bodyColor.fill, stroke: bodyColor.stroke, skipStroke: false };
+    return { fill: bodyColor.fill, stroke: DEFAULT_STROKE_COLOR, skipStroke: false };
   }
 
   if (COLORABLE_CATEGORIES.includes(categoryId as never)) {

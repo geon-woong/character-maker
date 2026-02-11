@@ -9,6 +9,9 @@ export const OFFSET_LIMIT = 20;
 export const ROTATION_LIMIT = 10;
 export const EDITABLE_CATEGORIES: readonly CategoryId[] = ['ears', 'ear2', 'arms', 'legs', 'mouth', 'nose', 'eyes'];
 
+/** 편집모드에서 X축 이동이 잠긴 카테고리 (중앙 정렬 부위) */
+export const X_LOCKED_CATEGORIES: readonly CategoryId[] = ['mouth', 'nose'];
+
 /** Categories that show the color palette UI */
 export const COLORABLE_CATEGORIES: readonly CategoryId[] = ['body', 'body2', 'face', 'face2', 'arms', 'legs', 'ears', 'ear2', 'nose'];
 
@@ -17,6 +20,9 @@ export const DEFAULT_EYES_COLOR = '#040000';
 
 /** Mouth follows this category's color */
 export const MOUTH_FOLLOWS: CategoryId = 'face';
+
+/** 일괄 색상 변경에서 제외되는 카테고리 */
+export const BULK_COLOR_EXCLUDED: readonly CategoryId[] = ['eyes', 'nose', 'mouth'];
 
 /** Mutually exclusive category groups — selecting one clears others in the same group */
 export const EXCLUSIVE_GROUPS: readonly CategoryId[][] = [['ears', 'ear2']];

@@ -6,7 +6,7 @@ import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTra
 import { DEFAULT_SYMMETRIC_TRANSFORM, DEFAULT_STROKE_COLOR } from '@/types/character';
 import { PARTS } from '@/data/parts';
 import { CATEGORIES } from '@/data/categories';
-import { OFFSET_LIMIT, ROTATION_LIMIT, COLORABLE_CATEGORIES, getExclusiveSiblings } from '@/lib/utils/constants';
+import { OFFSET_LIMIT, ROTATION_LIMIT, COLORABLE_CATEGORIES, BULK_COLOR_EXCLUDED, getExclusiveSiblings } from '@/lib/utils/constants';
 
 function clampSymmetricTransform(t: SymmetricTransform): SymmetricTransform {
   return {
@@ -92,12 +92,14 @@ export const useCharacterStore = create<CharacterState>()(
         })),
 
       applyColorToAll: (color) =>
-        set(() => {
-          const allColors: PartColors = {};
+        set((state) => {
+          const next: PartColors = { ...state.partColors };
           for (const id of COLORABLE_CATEGORIES) {
-            allColors[id] = color;
+            if (!BULK_COLOR_EXCLUDED.includes(id)) {
+              next[id] = color;
+            }
           }
-          return { partColors: allColors };
+          return { partColors: next };
         }),
 
       resetPartColor: (categoryId) =>
@@ -115,13 +117,21 @@ export const useCharacterStore = create<CharacterState>()(
         const excluded = new Set<CategoryId>();
         for (const category of CATEGORIES) {
           if (excluded.has(category.id)) continue;
-          const parts = PARTS[category.id];
+
+          const siblings = getExclusiveSiblings(category.id);
+          let targetId = category.id;
+          if (siblings.length > 0) {
+            const group = [category.id, ...siblings];
+            targetId = group[Math.floor(Math.random() * group.length)]!;
+          }
+
+          const parts = PARTS[targetId];
           if (parts && parts.length > 0) {
             const randomIndex = Math.floor(Math.random() * parts.length);
             const randomPart = parts[randomIndex];
             if (randomPart) {
-              randomized[category.id] = randomPart.id;
-              for (const id of getExclusiveSiblings(category.id)) excluded.add(id);
+              randomized[targetId] = randomPart.id;
+              for (const id of getExclusiveSiblings(targetId)) excluded.add(id);
             }
           }
         }
@@ -149,7 +159,7 @@ export const useCharacterStore = create<CharacterState>()(
     }),
     {
       name: 'character-maker-state',
-      version: 4,
+      version: 5,
       storage: createJSONStorage(() => sessionStorage),
       migrate: (persistedState, version) => {
         const state = persistedState as Record<string, unknown>;
@@ -172,6 +182,7 @@ export const useCharacterStore = create<CharacterState>()(
           }
           return { ...state, partColors: newColors };
         }
+        // v4→v5: globalStroke removed, no migration needed
         return state as unknown as CharacterState;
       },
       partialize: (state) => ({

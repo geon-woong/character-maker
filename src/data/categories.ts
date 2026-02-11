@@ -7,7 +7,7 @@ export const CATEGORIES: readonly Category[] = [
   { id: 'body2', name: '몸2', layerIndex: 3, isRequired: false },
   { id: 'ears', name: '귀', layerIndex: 4, isRequired: true },
   { id: 'face', name: '얼굴', layerIndex: 5, isRequired: true },
-  { id: 'ear2', name: '귀2', layerIndex: 6, isRequired: false },
+  // { id: 'ear2', name: '귀2', layerIndex: 6, isRequired: false },
   { id: 'face2', name: '얼굴2', layerIndex: 7, isRequired: false },
   { id: 'eyes', name: '눈', layerIndex: 8, isRequired: true },
   { id: 'mouth', name: '입', layerIndex: 9, isRequired: true },

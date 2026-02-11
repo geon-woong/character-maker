@@ -2,11 +2,11 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTransform, PartColors } from '@/types/character';
-import { DEFAULT_SYMMETRIC_TRANSFORM } from '@/types/character';
+import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTransform, PartColors, PartColor } from '@/types/character';
+import { DEFAULT_SYMMETRIC_TRANSFORM, DEFAULT_STROKE_COLOR } from '@/types/character';
 import { PARTS } from '@/data/parts';
 import { CATEGORIES } from '@/data/categories';
-import { OFFSET_LIMIT, ROTATION_LIMIT } from '@/lib/utils/constants';
+import { OFFSET_LIMIT, ROTATION_LIMIT, COLORABLE_CATEGORIES, getExclusiveSiblings } from '@/lib/utils/constants';
 
 function clampSymmetricTransform(t: SymmetricTransform): SymmetricTransform {
   return {
@@ -28,8 +28,8 @@ interface CharacterState {
   setActiveCategory: (categoryId: CategoryId) => void;
   setSymmetricTransform: (categoryId: CategoryId, updates: Partial<SymmetricTransform>) => void;
   resetPartTransform: (categoryId: CategoryId) => void;
-  setPartColor: (categoryId: CategoryId, fill: string) => void;
-  applyColorToAll: (fill: string) => void;
+  setPartColor: (categoryId: CategoryId, color: PartColor) => void;
+  applyColorToAll: (color: PartColor) => void;
   resetPartColor: (categoryId: CategoryId) => void;
   resetAllColors: () => void;
   randomizeAll: () => void;
@@ -49,12 +49,11 @@ export const useCharacterStore = create<CharacterState>()(
       setStep: (step) => set({ step }),
 
       selectPart: (categoryId, partId) =>
-        set((state) => ({
-          selectedParts: {
-            ...state.selectedParts,
-            [categoryId]: partId,
-          },
-        })),
+        set((state) => {
+          const next: SelectedParts = { ...state.selectedParts, [categoryId]: partId };
+          for (const id of getExclusiveSiblings(categoryId)) delete next[id];
+          return { selectedParts: next };
+        }),
 
       setActiveCategory: (categoryId) =>
         set({ activeCategoryId: categoryId }),
@@ -84,19 +83,19 @@ export const useCharacterStore = create<CharacterState>()(
         });
       },
 
-      setPartColor: (categoryId, fill) =>
+      setPartColor: (categoryId, color) =>
         set((state) => ({
           partColors: {
             ...state.partColors,
-            [categoryId]: fill,
+            [categoryId]: color,
           },
         })),
 
-      applyColorToAll: (fill) =>
+      applyColorToAll: (color) =>
         set(() => {
           const allColors: PartColors = {};
-          for (const category of CATEGORIES) {
-            allColors[category.id] = fill;
+          for (const id of COLORABLE_CATEGORIES) {
+            allColors[id] = color;
           }
           return { partColors: allColors };
         }),
@@ -113,13 +112,16 @@ export const useCharacterStore = create<CharacterState>()(
 
       randomizeAll: () => {
         const randomized: SelectedParts = {};
+        const excluded = new Set<CategoryId>();
         for (const category of CATEGORIES) {
+          if (excluded.has(category.id)) continue;
           const parts = PARTS[category.id];
           if (parts && parts.length > 0) {
             const randomIndex = Math.floor(Math.random() * parts.length);
             const randomPart = parts[randomIndex];
             if (randomPart) {
               randomized[category.id] = randomPart.id;
+              for (const id of getExclusiveSiblings(category.id)) excluded.add(id);
             }
           }
         }
@@ -139,21 +141,38 @@ export const useCharacterStore = create<CharacterState>()(
         const { selectedParts } = get();
         return CATEGORIES
           .filter((c) => c.isRequired)
-          .every((c) => selectedParts[c.id] != null);
+          .every((c) =>
+            selectedParts[c.id] != null ||
+            getExclusiveSiblings(c.id).some((id) => selectedParts[id] != null)
+          );
       },
     }),
     {
       name: 'character-maker-state',
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => sessionStorage),
       migrate: (persistedState, version) => {
+        const state = persistedState as Record<string, unknown>;
         if (version < 2) {
-          return { ...(persistedState as Record<string, unknown>), partTransforms: {}, partColors: {} };
+          return { ...state, partTransforms: {}, partColors: {} };
         }
         if (version < 3) {
-          return { ...(persistedState as Record<string, unknown>), partColors: {} };
+          return { ...state, partColors: {} };
         }
-        return persistedState as CharacterState;
+        if (version < 4) {
+          // v3→v4: partColors was string, now PartColor object
+          const oldColors = (state.partColors ?? {}) as Record<string, unknown>;
+          const newColors: PartColors = {};
+          for (const [key, val] of Object.entries(oldColors)) {
+            if (typeof val === 'string') {
+              newColors[key as CategoryId] = { fill: val, stroke: DEFAULT_STROKE_COLOR };
+            } else if (val && typeof val === 'object') {
+              newColors[key as CategoryId] = val as PartColor;
+            }
+          }
+          return { ...state, partColors: newColors };
+        }
+        return state as unknown as CharacterState;
       },
       partialize: (state) => ({
         step: state.step,

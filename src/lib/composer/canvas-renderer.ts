@@ -12,6 +12,30 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 /**
+ * Draw image using object-contain logic: maintain aspect ratio, center within canvas.
+ */
+function drawImageContain(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  cw: number,
+  ch: number
+) {
+  const imgRatio = img.naturalWidth / img.naturalHeight;
+  const canvasRatio = cw / ch;
+  let dw: number, dh: number;
+  if (imgRatio > canvasRatio) {
+    dw = cw;
+    dh = cw / imgRatio;
+  } else {
+    dh = ch;
+    dw = ch * imgRatio;
+  }
+  const dx = (cw - dw) / 2;
+  const dy = (ch - dh) / 2;
+  ctx.drawImage(img, dx, dy, dw, dh);
+}
+
+/**
  * Render resolved layers onto a canvas and return a Blob (PNG).
  * Layers with `side` are clipped to left/right half and transformed independently.
  */
@@ -36,7 +60,6 @@ export async function renderToBlob(
     const img = await loadImage(layer.svgPath);
     const hasTransform = layer.offsetX || layer.offsetY || layer.rotate;
 
-    // src/lib/composer/canvas-renderer.ts
     if (layer.side) {
       ctx.save();
       if (hasTransform) {
@@ -51,7 +74,7 @@ export async function renderToBlob(
       else ctx.rect(canvasWidth / 2, 0, canvasWidth / 2, canvasHeight);
       ctx.clip();
 
-      ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+      drawImageContain(ctx, img, canvasWidth, canvasHeight);
       ctx.restore();
     } else if (hasTransform) {
       ctx.save();
@@ -59,10 +82,10 @@ export async function renderToBlob(
       const rotateRad = (layer.rotate * Math.PI) / 180;
       ctx.rotate(rotateRad);
       ctx.translate(-canvasWidth / 2, -canvasHeight / 2);
-      ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+      drawImageContain(ctx, img, canvasWidth, canvasHeight);
       ctx.restore();
     } else {
-      ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+      drawImageContain(ctx, img, canvasWidth, canvasHeight);
     }
   }
 

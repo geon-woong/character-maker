@@ -1,11 +1,12 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { useCharacterStore } from '@/stores/character-store';
 import { CATEGORIES } from '@/data/categories';
-import { COLOR_PRESETS } from '@/lib/utils/color-presets';
-import { DEFAULT_FILL_COLOR } from '@/types/character';
+import { FILL_PRESETS, STROKE_PRESETS } from '@/lib/utils/color-presets';
+import { DEFAULT_FILL_COLOR, DEFAULT_STROKE_COLOR } from '@/types/character';
+import { COLORABLE_CATEGORIES } from '@/lib/utils/constants';
 import { cn } from '@/lib/utils/cn';
 
 export function ColorPalette() {
@@ -16,29 +17,50 @@ export function ColorPalette() {
   const resetPartColor = useCharacterStore((s) => s.resetPartColor);
 
   const category = CATEGORIES.find((c) => c.id === activeCategoryId);
-  const currentFill = partColors[activeCategoryId] ?? DEFAULT_FILL_COLOR;
+  const isColorable = COLORABLE_CATEGORIES.includes(activeCategoryId);
 
-  const handlePresetClick = useCallback(
-    (fill: string) => {
-      setPartColor(activeCategoryId, fill);
-    },
-    [activeCategoryId, setPartColor]
+  const currentColor = useMemo(
+    () => partColors[activeCategoryId] ?? { fill: DEFAULT_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR },
+    [partColors, activeCategoryId]
   );
 
-  const handleCustomColor = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setPartColor(activeCategoryId, e.target.value);
+  const handleFillPreset = useCallback(
+    (fill: string) => {
+      setPartColor(activeCategoryId, { ...currentColor, fill });
     },
-    [activeCategoryId, setPartColor]
+    [activeCategoryId, currentColor, setPartColor]
+  );
+
+  const handleStrokePreset = useCallback(
+    (stroke: string) => {
+      setPartColor(activeCategoryId, { ...currentColor, stroke });
+    },
+    [activeCategoryId, currentColor, setPartColor]
+  );
+
+  const handleCustomFill = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setPartColor(activeCategoryId, { ...currentColor, fill: e.target.value });
+    },
+    [activeCategoryId, currentColor, setPartColor]
+  );
+
+  const handleCustomStroke = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setPartColor(activeCategoryId, { ...currentColor, stroke: e.target.value });
+    },
+    [activeCategoryId, currentColor, setPartColor]
   );
 
   const handleApplyToAll = useCallback(() => {
-    applyColorToAll(currentFill);
-  }, [currentFill, applyColorToAll]);
+    applyColorToAll(currentColor);
+  }, [currentColor, applyColorToAll]);
 
   const handleReset = useCallback(() => {
     resetPartColor(activeCategoryId);
   }, [activeCategoryId, resetPartColor]);
+
+  if (!isColorable) return null;
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4">
@@ -47,42 +69,84 @@ export function ColorPalette() {
         <span className="text-sm font-medium text-gray-700">
           {category?.name} 색상
         </span>
-        <div
-          className="h-6 w-6 rounded-full border border-gray-300"
-          style={{ backgroundColor: currentFill }}
-        />
+        <div className="flex items-center gap-1">
+          <div
+            className="h-6 w-6 rounded-full border border-gray-300"
+            style={{ backgroundColor: currentColor.fill }}
+            title="채우기"
+          />
+          <div
+            className="h-6 w-6 rounded-full border border-gray-300"
+            style={{ backgroundColor: currentColor.stroke }}
+            title="선"
+          />
+        </div>
       </div>
 
-      {/* 프리셋 스와치 */}
-      <div className="flex flex-wrap gap-2">
-        {COLOR_PRESETS.map((preset) => (
-          <button
-            key={preset.id}
-            onClick={() => handlePresetClick(preset.fill)}
-            className={cn(
-              'h-8 w-8 rounded-full border-2 transition-all',
-              currentFill.toLowerCase() === preset.fill.toLowerCase()
-                ? 'border-indigo-500 ring-2 ring-indigo-200'
-                : 'border-gray-200 hover:border-gray-400'
-            )}
-            style={{ backgroundColor: preset.fill }}
-            title={preset.name}
-          />
-        ))}
+      {/* 채우기 프리셋 */}
+      <div>
+        <span className="mb-1 block text-xs text-gray-500">채우기</span>
+        <div className="flex flex-wrap gap-2">
+          {FILL_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              onClick={() => handleFillPreset(preset.color)}
+              className={cn(
+                'h-8 w-8 rounded-full border-2 transition-all',
+                currentColor.fill.toLowerCase() === preset.color.toLowerCase()
+                  ? 'border-indigo-500 ring-2 ring-indigo-200'
+                  : 'border-gray-200 hover:border-gray-400'
+              )}
+              style={{ backgroundColor: preset.color }}
+              title={preset.name}
+            />
+          ))}
+          <label
+            className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-dashed border-gray-300 bg-white hover:border-gray-400"
+            title="직접 선택"
+          >
+            <span className="text-xs text-gray-400">+</span>
+            <input
+              type="color"
+              value={currentColor.fill}
+              onChange={handleCustomFill}
+              className="absolute inset-0 cursor-pointer opacity-0"
+            />
+          </label>
+        </div>
+      </div>
 
-        {/* 자유 색상 선택기 */}
-        <label
-          className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-dashed border-gray-300 bg-white hover:border-gray-400"
-          title="직접 선택"
-        >
-          <span className="text-xs text-gray-400">+</span>
-          <input
-            type="color"
-            value={currentFill}
-            onChange={handleCustomColor}
-            className="absolute inset-0 cursor-pointer opacity-0"
-          />
-        </label>
+      {/* 선 프리셋 */}
+      <div>
+        <span className="mb-1 block text-xs text-gray-500">선</span>
+        <div className="flex flex-wrap gap-2">
+          {STROKE_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              onClick={() => handleStrokePreset(preset.color)}
+              className={cn(
+                'h-8 w-8 rounded-full border-2 transition-all',
+                currentColor.stroke.toLowerCase() === preset.color.toLowerCase()
+                  ? 'border-indigo-500 ring-2 ring-indigo-200'
+                  : 'border-gray-200 hover:border-gray-400'
+              )}
+              style={{ backgroundColor: preset.color }}
+              title={preset.name}
+            />
+          ))}
+          <label
+            className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-dashed border-gray-300 bg-white hover:border-gray-400"
+            title="직접 선택"
+          >
+            <span className="text-xs text-gray-400">+</span>
+            <input
+              type="color"
+              value={currentColor.stroke}
+              onChange={handleCustomStroke}
+              className="absolute inset-0 cursor-pointer opacity-0"
+            />
+          </label>
+        </div>
       </div>
 
       {/* 액션 버튼 */}

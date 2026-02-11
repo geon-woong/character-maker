@@ -1,11 +1,14 @@
 // ===== Category =====
 export type CategoryId =
   | 'body'
+  | 'body2'
   | 'face'
+  | 'face2'
   | 'eyes'
   | 'nose'
   | 'mouth'
   | 'ears'
+  | 'ear2'
   | 'arms'
   | 'legs';
 
@@ -62,8 +65,13 @@ export type PartTransforms = Partial<Record<CategoryId, SymmetricTransform>>;
 export const DEFAULT_SYMMETRIC_TRANSFORM: SymmetricTransform = { x: 0, y: 0, rotate: 0 };
 
 // ===== Part Color =====
-export type PartColors = Partial<Record<CategoryId, string>>; // categoryId → hex fill color
+export interface PartColor {
+  fill: string;
+  stroke: string;
+}
+export type PartColors = Partial<Record<CategoryId, PartColor>>;
 export const DEFAULT_FILL_COLOR = '#ffffff';
+export const DEFAULT_STROKE_COLOR = '#231815';
 
 // ===== Resolved Layer (for preview/export) =====
 export interface ResolvedLayer {

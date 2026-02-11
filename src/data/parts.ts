@@ -89,6 +89,31 @@ export const PARTS: Record<string, PartDefinition[]> = {
       variants: { 'standing/neutral': p('/assets/parts/mouth/02.svg') },
     },
   ],
+  body2: [
+    {
+      id: '01',
+      name: '몸2 01',
+      thumbnail: p('/assets/parts/body2/01.svg'),
+      variesByExpression: false,
+      variants: { 'standing/default': p('/assets/parts/body2/01.svg') },
+    },
+  ],
+  face2: [
+    {
+      id: '01',
+      name: '얼굴2 01',
+      thumbnail: p('/assets/parts/face2/01.svg'),
+      variesByExpression: false,
+      variants: { 'standing/default': p('/assets/parts/face2/01.svg') },
+    },
+    {
+      id: '02',
+      name: '얼굴2 02',
+      thumbnail: p('/assets/parts/face2/02.svg'),
+      variesByExpression: false,
+      variants: { 'standing/default': p('/assets/parts/face2/02.svg') },
+    },
+  ],
   ears: [
     {
       id: '01',
@@ -103,6 +128,36 @@ export const PARTS: Record<string, PartDefinition[]> = {
       thumbnail: p('/assets/parts/ears/02.svg'),
       variesByExpression: false,
       variants: { 'standing/default': p('/assets/parts/ears/02.svg') },
+    },
+  ],
+  ear2: [
+    {
+      id: '01',
+      name: '귀2 01',
+      thumbnail: p('/assets/parts/ear2/01.svg'),
+      variesByExpression: false,
+      variants: { 'standing/default': p('/assets/parts/ear2/01.svg') },
+    },
+    {
+      id: '02',
+      name: '귀2 02',
+      thumbnail: p('/assets/parts/ear2/02.svg'),
+      variesByExpression: false,
+      variants: { 'standing/default': p('/assets/parts/ear2/02.svg') },
+    },
+    {
+      id: '03',
+      name: '귀2 03',
+      thumbnail: p('/assets/parts/ear2/03.svg'),
+      variesByExpression: false,
+      variants: { 'standing/default': p('/assets/parts/ear2/03.svg') },
+    },
+    {
+      id: '04',
+      name: '귀2 04',
+      thumbnail: p('/assets/parts/ear2/04.svg'),
+      variesByExpression: false,
+      variants: { 'standing/default': p('/assets/parts/ear2/04.svg') },
     },
   ],
   arms: [

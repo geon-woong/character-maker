@@ -11,6 +11,16 @@ export function replaceFillColor(svgText: string, newFill: string): string {
 }
 
 /**
+ * Replace all stroke color values in SVG text.
+ */
+export function replaceStrokeColor(svgText: string, newStroke: string): string {
+  return svgText.replace(
+    /(stroke:\s*)(#[0-9a-fA-F]{3,8})/gi,
+    `$1${newStroke}`
+  );
+}
+
+/**
  * Convert SVG text to a base64 Data URI for use in <img src> and Canvas drawImage.
  */
 export function svgToDataUri(svgText: string): string {

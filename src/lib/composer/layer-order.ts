@@ -7,7 +7,7 @@ import type {
 } from '@/types/character';
 import { CATEGORIES } from '@/data/categories';
 import { PARTS } from '@/data/parts';
-import { EDITABLE_CATEGORIES } from '@/lib/utils/constants';
+import { EDITABLE_CATEGORIES, TRANSFORM_PARENT } from '@/lib/utils/constants';
 
 /**
  * Given the current selections, resolve the SVG path for each layer.
@@ -40,7 +40,8 @@ export function resolveLayers(
     if (!svgPath) continue;
 
     const isEditable = EDITABLE_CATEGORIES.includes(category.id);
-    const transform = partTransforms?.[category.id];
+    const parentId = TRANSFORM_PARENT[category.id];
+    const transform = partTransforms?.[category.id] ?? (parentId ? partTransforms?.[parentId] : undefined);
 
     if (isEditable && transform) {
       // Symmetric mirroring: X and rotate are inverted for right side

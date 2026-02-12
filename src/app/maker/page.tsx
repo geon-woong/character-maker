@@ -9,11 +9,19 @@ import { RandomizeButton } from '@/components/maker/RandomizeButton';
 import { ExportButton } from '@/components/maker/ExportButton';
 import { EditModeModal } from '@/components/maker/EditModeModal';
 import { ColorPalette } from '@/components/maker/ColorPalette';
+import { useCharacterStore } from '@/stores/character-store';
+
 import { Button } from '@/components/ui/Button';
+import { CATEGORIES } from '@/data/categories';
+import { getExclusiveSiblings } from '@/lib/utils/constants';
 
 export default function MakerPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
-
+  const complete = useCharacterStore((s) =>
+    CATEGORIES.filter((c) => c.isRequired).every(
+      (c) => s.selectedParts[c.id] != null || getExclusiveSiblings(c.id).some((id) => s.selectedParts[id] != null)
+    )
+  );
   return (
     <div className="flex flex-col gap-6">
       {/* Top bar */}

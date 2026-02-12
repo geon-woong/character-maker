@@ -4,10 +4,11 @@ import type {
   PoseId,
   ExpressionId,
   PartTransforms,
+  ViewDirection,
 } from '@/types/character';
 import { CATEGORIES } from '@/data/categories';
 import { PARTS } from '@/data/parts';
-import { EDITABLE_CATEGORIES, TRANSFORM_PARENT } from '@/lib/utils/constants';
+import { EDITABLE_CATEGORIES, TRANSFORM_PARENT, HIDDEN_CATEGORIES_BY_DIRECTION } from '@/lib/utils/constants';
 
 /**
  * Given the current selections, resolve the SVG path for each layer.
@@ -76,4 +77,25 @@ export function resolveLayers(
   }
 
   return layers.sort((a, b) => a.layerIndex - b.layerIndex);
+}
+
+/**
+ * Resolve layers filtered by view direction.
+ * For 'back' direction, facial categories (eyes, nose, mouth, face2) are removed.
+ */
+export function resolveLayersForDirection(
+  selectedParts: SelectedParts,
+  poseId: PoseId,
+  expressionId: ExpressionId,
+  partTransforms: PartTransforms | undefined,
+  direction: ViewDirection
+): ResolvedLayer[] {
+  const allLayers = resolveLayers(selectedParts, poseId, expressionId, partTransforms);
+  const hiddenCategories = HIDDEN_CATEGORIES_BY_DIRECTION[direction];
+
+  if (hiddenCategories.length === 0) return allLayers;
+
+  return allLayers.filter(
+    (layer) => !hiddenCategories.includes(layer.categoryId)
+  );
 }

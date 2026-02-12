@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTransform, PartColors, PartColor } from '@/types/character';
+import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTransform, PartColors, PartColor, ViewDirection } from '@/types/character';
 import { DEFAULT_SYMMETRIC_TRANSFORM, DEFAULT_STROKE_COLOR } from '@/types/character';
 import { PARTS } from '@/data/parts';
 import { CATEGORIES } from '@/data/categories';
@@ -22,6 +22,7 @@ interface CharacterState {
   activeCategoryId: CategoryId;
   partTransforms: PartTransforms;
   partColors: PartColors;
+  activeDirection: ViewDirection;
 
   setStep: (step: MakerStep) => void;
   selectPart: (categoryId: CategoryId, partId: string) => void;
@@ -35,6 +36,7 @@ interface CharacterState {
   randomizeAll: () => void;
   resetCharacter: () => void;
   isComplete: () => boolean;
+  setActiveDirection: (direction: ViewDirection) => void;
 }
 
 export const useCharacterStore = create<CharacterState>()(
@@ -45,6 +47,7 @@ export const useCharacterStore = create<CharacterState>()(
       activeCategoryId: 'body',
       partTransforms: {},
       partColors: {},
+      activeDirection: 'front',
 
       setStep: (step) => set({ step }),
 
@@ -145,7 +148,10 @@ export const useCharacterStore = create<CharacterState>()(
           activeCategoryId: 'body',
           partTransforms: {},
           partColors: {},
+          activeDirection: 'front',
         }),
+
+      setActiveDirection: (direction) => set({ activeDirection: direction }),
 
       isComplete: () => {
         const { selectedParts } = get();
@@ -159,7 +165,7 @@ export const useCharacterStore = create<CharacterState>()(
     }),
     {
       name: 'character-maker-state',
-      version: 5,
+      version: 6,
       storage: createJSONStorage(() => sessionStorage),
       migrate: (persistedState, version) => {
         const state = persistedState as Record<string, unknown>;
@@ -183,6 +189,9 @@ export const useCharacterStore = create<CharacterState>()(
           return { ...state, partColors: newColors };
         }
         // v4→v5: globalStroke removed, no migration needed
+        if (version < 6) {
+          return { ...state, activeDirection: 'front' };
+        }
         return state as unknown as CharacterState;
       },
       partialize: (state) => ({
@@ -191,6 +200,7 @@ export const useCharacterStore = create<CharacterState>()(
         activeCategoryId: state.activeCategoryId,
         partTransforms: state.partTransforms,
         partColors: state.partColors,
+        activeDirection: state.activeDirection,
       }),
     }
   )

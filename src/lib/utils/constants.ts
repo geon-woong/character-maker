@@ -1,4 +1,4 @@
-import type { CategoryId } from '@/types/character';
+import type { CategoryId, ViewDirection } from '@/types/character';
 
 export const CANVAS_WIDTH = 1080;
 export const CANVAS_HEIGHT = 1080;
@@ -43,3 +43,32 @@ export const TRANSFORM_PARENT: Partial<Record<CategoryId, CategoryId>> = {
   face2: 'face',
   ear2: 'ears',
 };
+
+// ===== View Direction =====
+
+/** Categories hidden for specific view directions */
+export const HIDDEN_CATEGORIES_BY_DIRECTION: Record<ViewDirection, readonly CategoryId[]> = {
+  front: [],
+  back: ['eyes', 'nose', 'mouth', 'face2'],
+  'side-left': [],
+  'side-right': [],
+};
+
+/** CSS container transform per direction */
+export const DIRECTION_CSS_TRANSFORMS: Record<ViewDirection, string> = {
+  front: 'none',
+  back: 'scaleX(-1)',
+  'side-left': 'perspective(800px) rotateY(-30deg)',
+  'side-right': 'perspective(800px) rotateY(30deg)',
+};
+
+/** Direction labels (Korean) */
+export const DIRECTION_LABELS: Record<ViewDirection, string> = {
+  front: '정면',
+  back: '뒷면',
+  'side-left': '왼쪽',
+  'side-right': '오른쪽',
+};
+
+/** All view directions in display order */
+export const ALL_DIRECTIONS: readonly ViewDirection[] = ['front', 'side-left', 'side-right', 'back'];

@@ -5,9 +5,9 @@ import { Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { useCharacterStore } from '@/stores/character-store';
-import { resolveLayers } from '@/lib/composer/layer-order';
+import { resolveLayersForDirection } from '@/lib/composer/layer-order';
 import { applyColorsToLayers } from '@/lib/color/apply-colors';
-import { renderToBlob } from '@/lib/composer/canvas-renderer';
+import { renderToBlobWithDirection } from '@/lib/composer/canvas-renderer';
 import { downloadBlob } from '@/lib/export/download-manager';
 import {
   CANVAS_WIDTH,
@@ -44,6 +44,7 @@ export function ExportButton() {
   const partTransforms = useCharacterStore((s) => s.partTransforms);
   const partColors = useCharacterStore((s) => s.partColors);
   const isComplete = useCharacterStore((s) => s.isComplete);
+  const activeDirection = useCharacterStore((s) => s.activeDirection);
 
   const activePreset: ExportPreset = useMemo(
     () => EXPORT_PRESETS.find((p) => p.id === presetId) ?? EXPORT_PRESETS[1]!,
@@ -58,22 +59,24 @@ export function ExportButton() {
 
     setIsExporting(true);
     try {
-      const baseLayers = resolveLayers(
+      const baseLayers = resolveLayersForDirection(
         selectedParts,
         DEFAULT_POSE_ID,
         DEFAULT_EXPRESSION_ID,
-        partTransforms
+        partTransforms,
+        activeDirection
       );
       const layers = await applyColorsToLayers(baseLayers, partColors);
 
-      const blob = await renderToBlob(
+      const blob = await renderToBlobWithDirection(
         layers,
         CANVAS_WIDTH,
         CANVAS_HEIGHT,
-        activePreset.scale
+        activePreset.scale,
+        activeDirection
       );
       const timestamp = Date.now();
-      downloadBlob(blob, `character-${timestamp}-${activePreset.id}.png`);
+      downloadBlob(blob, `character-${timestamp}-${activeDirection}-${activePreset.id}.png`);
       toast.success('캐릭터 이미지를 다운로드했습니다!');
     } catch (error) {
       console.error('Export failed:', error);

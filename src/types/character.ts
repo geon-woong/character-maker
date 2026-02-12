@@ -49,7 +49,10 @@ export interface PartDefinition {
 // ===== Selection State =====
 export type SelectedParts = Partial<Record<CategoryId, string>>; // categoryId → partId
 
-export type MakerStep = 'parts' | 'export';
+export type MakerStep = 'parts' | 'direction' | 'export';
+
+// ===== View Direction =====
+export type ViewDirection = 'front' | 'back' | 'side-left' | 'side-right';
 
 // ===== Part Transform =====
 export type PartSide = 'left' | 'right';

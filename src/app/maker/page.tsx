@@ -16,12 +16,18 @@ import { ExpressionSelector } from '@/components/maker/ExpressionSelector';
 import { Button } from '@/components/ui/Button';
 import { useCharacterStore } from '@/stores/character-store';
 import { POSE_MAP, EXPRESSION_MAP } from '@/data/poses-expressions';
+import { CATEGORIES } from '@/data/categories';
+import { getExclusiveSiblings } from '@/lib/utils/constants';
 
 export default function MakerPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const step = useCharacterStore((s) => s.step);
   const setStep = useCharacterStore((s) => s.setStep);
-  const isComplete = useCharacterStore((s) => s.isComplete);
+  const complete = useCharacterStore((s) =>
+    CATEGORIES.filter((c) => c.isRequired).every(
+      (c) => s.selectedParts[c.id] != null || getExclusiveSiblings(c.id).some((id) => s.selectedParts[id] != null)
+    )
+  );
   const activePoseId = useCharacterStore((s) => s.activePoseId);
   const activeExpressionId = useCharacterStore((s) => s.activeExpressionId);
 
@@ -128,7 +134,7 @@ export default function MakerPage() {
       <div className="flex justify-end">
         <Button
           onClick={() => setStep('action')}
-          disabled={!isComplete()}
+          disabled={!complete}
           className="gap-2"
           size="lg"
         >

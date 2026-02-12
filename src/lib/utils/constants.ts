@@ -7,13 +7,13 @@ export const DEFAULT_POSE_ID = 'standing' as const;
 export const DEFAULT_EXPRESSION_ID = 'neutral' as const;
 export const OFFSET_LIMIT = 20;
 export const ROTATION_LIMIT = 10;
-export const EDITABLE_CATEGORIES: readonly CategoryId[] = ['ears', 'ear2', 'arms', 'legs', 'mouth', 'nose', 'eyes'];
+export const EDITABLE_CATEGORIES: readonly CategoryId[] = ['ears', 'arms', 'legs', 'mouth', 'nose', 'eyes'];
 
 /** 편집모드에서 X축 이동이 잠긴 카테고리 (중앙 정렬 부위) */
 export const X_LOCKED_CATEGORIES: readonly CategoryId[] = ['mouth', 'nose'];
 
 /** Categories that show the color palette UI */
-export const COLORABLE_CATEGORIES: readonly CategoryId[] = ['body', 'body2', 'face', 'face2', 'arms', 'legs', 'ears', 'ear2', 'nose'];
+export const COLORABLE_CATEGORIES: readonly CategoryId[] = ['body', 'body2', 'face', 'face2', 'arms', 'legs', 'ears', 'nose'];
 
 /** Default fill color for eyes (fixed, not user-changeable) */
 export const DEFAULT_EYES_COLOR = '#040000';
@@ -25,7 +25,7 @@ export const MOUTH_FOLLOWS: CategoryId = 'face';
 export const BULK_COLOR_EXCLUDED: readonly CategoryId[] = ['eyes', 'nose', 'mouth'];
 
 /** Mutually exclusive category groups — selecting one clears others in the same group */
-export const EXCLUSIVE_GROUPS: readonly CategoryId[][] = [['ears', 'ear2']];
+export const EXCLUSIVE_GROUPS: readonly CategoryId[][] = [];
 
 /** Get other category IDs in the same exclusive group */
 export function getExclusiveSiblings(categoryId: CategoryId): CategoryId[] {
@@ -41,7 +41,6 @@ export function getExclusiveSiblings(categoryId: CategoryId): CategoryId[] {
 export const TRANSFORM_PARENT: Partial<Record<CategoryId, CategoryId>> = {
   body2: 'body',
   face2: 'face',
-  ear2: 'ears',
 };
 
 // ===== View Direction =====

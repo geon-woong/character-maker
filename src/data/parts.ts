@@ -48,6 +48,10 @@ export const PARTS: Record<string, PartDefinition[]> = {
       thumbnail: p('/assets/parts/eyes/01.svg'),
       variesByExpression: true,
       variants: { 'standing/neutral': p('/assets/parts/eyes/01.svg') },
+      positionOverrides: {
+        'side-left': { offsetX: -80 },
+        'side-right': { offsetX: 80 },
+      },
     },
     {
       id: '02',
@@ -55,6 +59,10 @@ export const PARTS: Record<string, PartDefinition[]> = {
       thumbnail: p('/assets/parts/eyes/02.svg'),
       variesByExpression: true,
       variants: { 'standing/neutral': p('/assets/parts/eyes/02.svg') },
+      positionOverrides: {
+        'side-left': { offsetX: -80 },
+        'side-right': { offsetX: 80 },
+      },
     },
   ],
   nose: [
@@ -64,6 +72,10 @@ export const PARTS: Record<string, PartDefinition[]> = {
       thumbnail: p('/assets/parts/nose/01.svg'),
       variesByExpression: false,
       variants: { 'standing/default': p('/assets/parts/nose/01.svg') },
+      positionOverrides: {
+        'side-left': { offsetX: -80 },
+        'side-right': { offsetX: 80 },
+      },
     },
     {
       id: '02',
@@ -71,6 +83,10 @@ export const PARTS: Record<string, PartDefinition[]> = {
       thumbnail: p('/assets/parts/nose/02.svg'),
       variesByExpression: false,
       variants: { 'standing/default': p('/assets/parts/nose/02.svg') },
+      positionOverrides: {
+        'side-left': { offsetX: -80 },
+        'side-right': { offsetX: 80 },
+      },
     },
   ],
   mouth: [
@@ -80,6 +96,10 @@ export const PARTS: Record<string, PartDefinition[]> = {
       thumbnail: p('/assets/parts/mouth/01.svg'),
       variesByExpression: true,
       variants: { 'standing/neutral': p('/assets/parts/mouth/01.svg') },
+      positionOverrides: {
+        'side-left': { offsetX: -80 },
+        'side-right': { offsetX: 80 },
+      },
     },
     {
       id: '02',
@@ -87,6 +107,10 @@ export const PARTS: Record<string, PartDefinition[]> = {
       thumbnail: p('/assets/parts/mouth/02.svg'),
       variesByExpression: true,
       variants: { 'standing/neutral': p('/assets/parts/mouth/02.svg') },
+      positionOverrides: {
+        'side-left': { offsetX: -80 },
+        'side-right': { offsetX: 80 },
+      },
     },
   ],
   body2: [
@@ -105,6 +129,10 @@ export const PARTS: Record<string, PartDefinition[]> = {
       thumbnail: p('/assets/parts/face2/01.svg'),
       variesByExpression: false,
       variants: { 'standing/default': p('/assets/parts/face2/01.svg') },
+      positionOverrides: {
+        'side-left': { offsetX: -40 },
+        'side-right': { offsetX: 40 },
+      },
     },
     {
       id: '02',
@@ -112,6 +140,10 @@ export const PARTS: Record<string, PartDefinition[]> = {
       thumbnail: p('/assets/parts/face2/02.svg'),
       variesByExpression: false,
       variants: { 'standing/default': p('/assets/parts/face2/02.svg') },
+      positionOverrides: {
+        'side-left': { offsetX: -40 },
+        'side-right': { offsetX: 40 },
+      },
     },
   ],
   ears: [

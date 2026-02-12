@@ -38,12 +38,21 @@ export interface PartVariants {
   readonly [poseAndExpression: string]: string; // e.g. "standing/neutral" → "/assets/..."
 }
 
+/** Design-time position override for a part (additive to user transforms) */
+export interface PartPosition {
+  readonly offsetX?: number;
+  readonly offsetY?: number;
+  readonly rotate?: number;
+}
+
 export interface PartDefinition {
   readonly id: string;
   readonly name: string;
   readonly thumbnail: string;
   readonly variesByExpression: boolean;
   readonly variants: PartVariants;
+  /** Position overrides keyed by ViewDirection (e.g. "side-left") or variant key (e.g. "side-standing/default") */
+  readonly positionOverrides?: Record<string, PartPosition>;
 }
 
 // ===== Selection State =====

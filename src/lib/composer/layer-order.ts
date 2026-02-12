@@ -4,7 +4,9 @@ import type {
   PoseId,
   ExpressionId,
   PartTransforms,
+  PartPosition,
   ViewDirection,
+  CategoryId,
 } from '@/types/character';
 import { CATEGORIES } from '@/data/categories';
 import { PARTS } from '@/data/parts';
@@ -80,8 +82,26 @@ export function resolveLayers(
 }
 
 /**
- * Resolve layers filtered by view direction.
+ * Look up design-time position override for a part.
+ * Checks direction key first (e.g. "side-left"), then variant key (e.g. "side-standing/default").
+ */
+function getPositionOverride(
+  categoryId: CategoryId,
+  partId: string,
+  direction: ViewDirection,
+  variantKey: string
+): PartPosition | undefined {
+  const categoryParts = PARTS[categoryId];
+  if (!categoryParts) return undefined;
+  const part = categoryParts.find((p) => p.id === partId);
+  if (!part?.positionOverrides) return undefined;
+  return part.positionOverrides[direction] ?? part.positionOverrides[variantKey];
+}
+
+/**
+ * Resolve layers filtered by view direction, with design-time position overrides applied.
  * For 'back' direction, facial categories (eyes, nose, mouth, face2) are removed.
+ * Position overrides from part data are additive to user transforms.
  */
 export function resolveLayersForDirection(
   selectedParts: SelectedParts,
@@ -93,9 +113,26 @@ export function resolveLayersForDirection(
   const allLayers = resolveLayers(selectedParts, poseId, expressionId, partTransforms);
   const hiddenCategories = HIDDEN_CATEGORIES_BY_DIRECTION[direction];
 
-  if (hiddenCategories.length === 0) return allLayers;
+  const filtered = hiddenCategories.length === 0
+    ? allLayers
+    : allLayers.filter((layer) => !hiddenCategories.includes(layer.categoryId));
 
-  return allLayers.filter(
-    (layer) => !hiddenCategories.includes(layer.categoryId)
-  );
+  if (direction === 'front') return filtered;
+
+  const variantKey = `${poseId}/default`;
+
+  return filtered.map((layer) => {
+    const partId = selectedParts[layer.categoryId];
+    if (!partId) return layer;
+
+    const override = getPositionOverride(layer.categoryId, partId, direction, variantKey);
+    if (!override) return layer;
+
+    return {
+      ...layer,
+      offsetX: layer.offsetX + (override.offsetX ?? 0),
+      offsetY: layer.offsetY + (override.offsetY ?? 0),
+      rotate: layer.rotate + (override.rotate ?? 0),
+    };
+  });
 }

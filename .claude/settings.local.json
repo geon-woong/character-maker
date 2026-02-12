@@ -4,7 +4,9 @@
       "Bash(npm run dev:*)",
       "Bash(npm.cmd run:*)",
       "Bash(powershell.exe -Command \"Get-Command node -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source\")",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(wc:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }

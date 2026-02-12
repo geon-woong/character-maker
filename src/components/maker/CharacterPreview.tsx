@@ -6,7 +6,7 @@ import { useCharacterStore } from '@/stores/character-store';
 import { resolveLayers } from '@/lib/composer/layer-order';
 import { applyColorsToLayers } from '@/lib/color/apply-colors';
 import type { ResolvedLayer } from '@/types/character';
-import { DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID, CANVAS_WIDTH, CANVAS_HEIGHT } from '@/lib/utils/constants';
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from '@/lib/utils/constants';
 import { cn } from '@/lib/utils/cn';
 
 interface CharacterPreviewProps {
@@ -48,10 +48,12 @@ export function CharacterPreview({ className }: CharacterPreviewProps) {
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
   const partColors = useCharacterStore((s) => s.partColors);
+  const activePoseId = useCharacterStore((s) => s.activePoseId);
+  const activeExpressionId = useCharacterStore((s) => s.activeExpressionId);
 
   const baseLayers = useMemo(
-    () => resolveLayers(selectedParts, DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID, partTransforms),
-    [selectedParts, partTransforms]
+    () => resolveLayers(selectedParts, activePoseId, activeExpressionId, partTransforms),
+    [selectedParts, activePoseId, activeExpressionId, partTransforms]
   );
 
   useEffect(() => {

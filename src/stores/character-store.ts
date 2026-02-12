@@ -2,10 +2,11 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTransform, PartColors, PartColor, ViewDirection } from '@/types/character';
+import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTransform, PartColors, PartColor, ViewDirection, PoseId, ExpressionId } from '@/types/character';
 import { DEFAULT_SYMMETRIC_TRANSFORM, DEFAULT_STROKE_COLOR } from '@/types/character';
 import { PARTS } from '@/data/parts';
 import { CATEGORIES } from '@/data/categories';
+import { ACTION_MAP } from '@/data/poses-expressions';
 import { OFFSET_LIMIT, ROTATION_LIMIT, COLORABLE_CATEGORIES, BULK_COLOR_EXCLUDED, getExclusiveSiblings } from '@/lib/utils/constants';
 
 function clampSymmetricTransform(t: SymmetricTransform): SymmetricTransform {
@@ -23,6 +24,9 @@ interface CharacterState {
   partTransforms: PartTransforms;
   partColors: PartColors;
   activeDirection: ViewDirection;
+  activePoseId: PoseId;
+  activeExpressionId: ExpressionId;
+  activeActionId: string | null;
 
   setStep: (step: MakerStep) => void;
   selectPart: (categoryId: CategoryId, partId: string) => void;
@@ -37,6 +41,9 @@ interface CharacterState {
   resetCharacter: () => void;
   isComplete: () => boolean;
   setActiveDirection: (direction: ViewDirection) => void;
+  setPose: (poseId: PoseId) => void;
+  setExpression: (expressionId: ExpressionId) => void;
+  setAction: (actionId: string) => void;
 }
 
 export const useCharacterStore = create<CharacterState>()(
@@ -48,6 +55,9 @@ export const useCharacterStore = create<CharacterState>()(
       partTransforms: {},
       partColors: {},
       activeDirection: 'front',
+      activePoseId: 'standing',
+      activeExpressionId: 'neutral',
+      activeActionId: null,
 
       setStep: (step) => set({ step }),
 
@@ -149,9 +159,26 @@ export const useCharacterStore = create<CharacterState>()(
           partTransforms: {},
           partColors: {},
           activeDirection: 'front',
+          activePoseId: 'standing',
+          activeExpressionId: 'neutral',
+          activeActionId: null,
         }),
 
       setActiveDirection: (direction) => set({ activeDirection: direction }),
+
+      setPose: (poseId) => set({ activePoseId: poseId, activeActionId: null }),
+
+      setExpression: (expressionId) => set({ activeExpressionId: expressionId, activeActionId: null }),
+
+      setAction: (actionId) => {
+        const action = ACTION_MAP.get(actionId);
+        if (!action) return;
+        set({
+          activePoseId: action.poseId,
+          activeExpressionId: action.expressionId,
+          activeActionId: actionId,
+        });
+      },
 
       isComplete: () => {
         const { selectedParts } = get();
@@ -165,7 +192,7 @@ export const useCharacterStore = create<CharacterState>()(
     }),
     {
       name: 'character-maker-state',
-      version: 6,
+      version: 7,
       storage: createJSONStorage(() => sessionStorage),
       migrate: (persistedState, version) => {
         const state = persistedState as Record<string, unknown>;
@@ -192,6 +219,14 @@ export const useCharacterStore = create<CharacterState>()(
         if (version < 6) {
           return { ...state, activeDirection: 'front' };
         }
+        if (version < 7) {
+          return {
+            ...state,
+            activePoseId: 'standing',
+            activeExpressionId: 'neutral',
+            activeActionId: null,
+          };
+        }
         return state as unknown as CharacterState;
       },
       partialize: (state) => ({
@@ -201,6 +236,9 @@ export const useCharacterStore = create<CharacterState>()(
         partTransforms: state.partTransforms,
         partColors: state.partColors,
         activeDirection: state.activeDirection,
+        activePoseId: state.activePoseId,
+        activeExpressionId: state.activeExpressionId,
+        activeActionId: state.activeActionId,
       }),
     }
   )

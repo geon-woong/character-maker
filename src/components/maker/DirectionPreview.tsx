@@ -7,8 +7,6 @@ import { resolveLayersForDirection } from '@/lib/composer/layer-order';
 import { applyColorsToLayers } from '@/lib/color/apply-colors';
 import type { ResolvedLayer, ViewDirection } from '@/types/character';
 import {
-  DEFAULT_POSE_ID,
-  DEFAULT_EXPRESSION_ID,
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
   DIRECTION_CSS_TRANSFORMS,
@@ -43,10 +41,12 @@ export function DirectionPreview({ direction, isSelected, onClick, className }: 
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
   const partColors = useCharacterStore((s) => s.partColors);
+  const activePoseId = useCharacterStore((s) => s.activePoseId);
+  const activeExpressionId = useCharacterStore((s) => s.activeExpressionId);
 
   const baseLayers = useMemo(
-    () => resolveLayersForDirection(selectedParts, DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID, partTransforms, direction),
-    [selectedParts, partTransforms, direction]
+    () => resolveLayersForDirection(selectedParts, activePoseId, activeExpressionId, partTransforms, direction),
+    [selectedParts, activePoseId, activeExpressionId, partTransforms, direction]
   );
 
   useEffect(() => {

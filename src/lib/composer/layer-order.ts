@@ -5,12 +5,81 @@ import type {
   ExpressionId,
   PartTransforms,
   PartPosition,
+  PartDefinition,
   ViewDirection,
   CategoryId,
 } from '@/types/character';
 import { CATEGORIES } from '@/data/categories';
 import { PARTS } from '@/data/parts';
 import { EDITABLE_CATEGORIES, TRANSFORM_PARENT, HIDDEN_CATEGORIES_BY_DIRECTION } from '@/lib/utils/constants';
+
+/**
+ * Build the variant key for a part based on its variesByPose/variesByExpression flags.
+ *
+ *   variesByPose + variesByExpression: "{poseId}/{expressionId}"
+ *   variesByPose only:                "{poseId}/default"
+ *   variesByExpression only:          "any/{expressionId}"
+ *   neither:                          "any/default"
+ */
+function buildVariantKey(
+  part: PartDefinition,
+  poseId: PoseId,
+  expressionId: ExpressionId
+): string {
+  const pose = part.variesByPose ? poseId : 'any';
+  const expression = part.variesByExpression ? expressionId : 'default';
+  return `${pose}/${expression}`;
+}
+
+/**
+ * Resolve the variant key with fallback chain for graceful degradation
+ * when assets are not yet available for a specific pose/expression combo.
+ *
+ * Fallback order:
+ *   1. Exact key (e.g. "sitting/happy")
+ *   2. Standing fallback (e.g. "standing/happy")
+ *   3. Neutral fallback (e.g. "sitting/neutral" or "sitting/default")
+ *   4. Standing+neutral fallback (e.g. "standing/neutral" or "standing/default")
+ *   5. First available variant
+ */
+function resolveVariantKey(
+  part: PartDefinition,
+  poseId: PoseId,
+  expressionId: ExpressionId
+): string | undefined {
+  const exactKey = buildVariantKey(part, poseId, expressionId);
+  if (part.variants[exactKey]) return exactKey;
+
+  // Fallback: try standing pose with same expression
+  if (part.variesByPose && poseId !== 'standing') {
+    const standingKey = buildVariantKey(
+      { ...part, variesByPose: true },
+      'standing',
+      expressionId
+    );
+    if (part.variants[standingKey]) return standingKey;
+  }
+
+  // Fallback: try same pose with neutral expression
+  if (part.variesByExpression && expressionId !== 'neutral') {
+    const neutralKey = buildVariantKey(
+      { ...part, variesByExpression: true },
+      poseId,
+      'neutral'
+    );
+    if (part.variants[neutralKey]) return neutralKey;
+  }
+
+  // Fallback: standing + neutral
+  const defaultKey = part.variesByPose
+    ? (part.variesByExpression ? 'standing/neutral' : 'standing/default')
+    : (part.variesByExpression ? 'any/neutral' : 'any/default');
+  if (part.variants[defaultKey]) return defaultKey;
+
+  // Last resort: first available variant
+  const keys = Object.keys(part.variants);
+  return keys.length > 0 ? keys[0] : undefined;
+}
 
 /**
  * Given the current selections, resolve the SVG path for each layer.
@@ -35,9 +104,8 @@ export function resolveLayers(
     const part = categoryParts.find((p) => p.id === partId);
     if (!part) continue;
 
-    const variantKey = part.variesByExpression
-      ? `${poseId}/${expressionId}`
-      : `${poseId}/default`;
+    const variantKey = resolveVariantKey(part, poseId, expressionId);
+    if (!variantKey) continue;
 
     const svgPath = part.variants[variantKey];
     if (!svgPath) continue;

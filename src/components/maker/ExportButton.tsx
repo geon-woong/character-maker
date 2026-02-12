@@ -13,8 +13,6 @@ import {
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
   CANVAS_EXPORT_SCALE,
-  DEFAULT_POSE_ID,
-  DEFAULT_EXPRESSION_ID,
 } from '@/lib/utils/constants';
 
 type ExportPresetId = 'web' | 'standard' | 'hires';
@@ -45,6 +43,8 @@ export function ExportButton() {
   const partColors = useCharacterStore((s) => s.partColors);
   const isComplete = useCharacterStore((s) => s.isComplete);
   const activeDirection = useCharacterStore((s) => s.activeDirection);
+  const activePoseId = useCharacterStore((s) => s.activePoseId);
+  const activeExpressionId = useCharacterStore((s) => s.activeExpressionId);
 
   const activePreset: ExportPreset = useMemo(
     () => EXPORT_PRESETS.find((p) => p.id === presetId) ?? EXPORT_PRESETS[1]!,
@@ -61,8 +61,8 @@ export function ExportButton() {
     try {
       const baseLayers = resolveLayersForDirection(
         selectedParts,
-        DEFAULT_POSE_ID,
-        DEFAULT_EXPRESSION_ID,
+        activePoseId,
+        activeExpressionId,
         partTransforms,
         activeDirection
       );

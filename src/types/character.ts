@@ -20,17 +20,34 @@ export interface Category {
 }
 
 // ===== Pose & Expression =====
-export type PoseId = 'standing'; // MVP: single pose only
-export type ExpressionId = 'neutral'; // MVP: single expression only
+export type PoseId = 'standing' | 'walking' | 'running' | 'sitting' | 'lying' | 'jumping';
+export type ExpressionId = 'neutral' | 'happy' | 'sad' | 'angry' | 'surprised';
+
+export type PoseCategory = 'basic' | 'special';
 
 export interface Pose {
   readonly id: PoseId;
   readonly name: string;
+  readonly thumbnail: string;
+  readonly category: PoseCategory;
 }
 
 export interface Expression {
   readonly id: ExpressionId;
   readonly name: string;
+  readonly thumbnail: string;
+}
+
+// ===== Action (Pose + Expression preset) =====
+export type ActionCategory = 'basic' | 'emotion' | 'special';
+
+export interface Action {
+  readonly id: string;
+  readonly name: string;
+  readonly poseId: PoseId;
+  readonly expressionId: ExpressionId;
+  readonly thumbnail: string;
+  readonly category: ActionCategory;
 }
 
 // ===== Part =====
@@ -50,6 +67,7 @@ export interface PartDefinition {
   readonly name: string;
   readonly thumbnail: string;
   readonly variesByExpression: boolean;
+  readonly variesByPose: boolean;
   readonly variants: PartVariants;
   /** Position overrides keyed by ViewDirection (e.g. "side-left") or variant key (e.g. "side-standing/default") */
   readonly positionOverrides?: Record<string, PartPosition>;
@@ -58,7 +76,7 @@ export interface PartDefinition {
 // ===== Selection State =====
 export type SelectedParts = Partial<Record<CategoryId, string>>; // categoryId → partId
 
-export type MakerStep = 'parts' | 'direction' | 'export';
+export type MakerStep = 'parts' | 'action' | 'direction' | 'export';
 
 // ===== View Direction =====
 export type ViewDirection = 'front' | 'back' | 'side-left' | 'side-right';

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a character maker web application built with Next.js 15, React 19, TypeScript, and Tailwind CSS v4. Users can create custom characters by selecting different body parts (body, face, eyes, nose, mouth, ears, arms, legs) from a visual grid, preview them in real-time, and export as PNG images.
+This is a character maker web application built with Next.js 15, React 19, TypeScript, and Tailwind CSS v4. Users can create custom characters by selecting different body parts (body, face, eyes, nose, mouth, ears) from a visual grid, preview them in real-time, and export as PNG images. Supports turnaround (direction views) and posture (pose variants) as independent features.
 
 ## Development Commands
 
@@ -27,69 +27,88 @@ npm run lint         # Run ESLint
 ### State Management
 - **Zustand** store at `src/stores/character-store.ts` manages all character state
 - State is persisted to `sessionStorage` for tab-level persistence
-- Key state: `selectedParts`, `activeCategoryId`, `step`, `partTransforms`
+- Key state: `selectedParts`, `activeCategoryId`, `step`, `partTransforms`, `activeDirection`, `activePoseId`
 
 ### Character Composition System
 The app uses a **layer-based composition** approach:
 
 1. **Categories** (`src/data/categories.ts`): Define body part types with explicit `layerIndex` for z-order
-   - Layer order (bottom to top): legs → arms → body → ears → face → eyes → nose → mouth
+   - Layer order (bottom to top): body → body2 → ears → face → face2 → eyes → mouth → nose
    - Each category has Korean names and required flags
 
 2. **Parts** (`src/data/parts.ts`): Define available assets for each category
    - Each part can have multiple variants based on pose/expression
    - Variant key pattern: `"{poseId}/{expressionId}"` or `"{poseId}/default"`
    - Some parts `variesByExpression` (eyes, mouth), others don't
+   - Parts can have `directionVariants` for turnaround-specific images
+   - Parts can have `positionOverrides` for direction-specific offsets (face parts)
 
 3. **Layer Resolution** (`src/lib/composer/layer-order.ts`):
    - `resolveLayers()` converts `selectedParts` → `ResolvedLayer[]` with correct z-order
-   - Editable categories (ears, arms, legs) are split into symmetric left/right `ResolvedLayer` pairs
-   - Non-editable categories produce a single layer
-   - Accepts optional `partTransforms` for symmetric offset/rotation data
+   - Editable categories (ears) are split into symmetric left/right `ResolvedLayer` pairs
+   - `resolveLayersForDirection()` applies direction-specific images and position overrides
 
 4. **Canvas Rendering** (`src/lib/composer/canvas-renderer.ts`):
    - `renderToBlob()` loads SVG/PNG images and composites them onto an HTML canvas
-   - Layers with `side` are clipped to left/right half via `ctx.rect()` + `ctx.clip()`
-   - Layers with transforms use `ctx.save/translate/rotate/restore` for offset + rotation
-   - Uses `CANVAS_EXPORT_SCALE` for high-quality export
-   - Returns PNG Blob for download
+   - `renderToBlobWithDirection()` handles back flip; side/half-side use actual images directly
+
+### Turnaround System (Direction Views)
+
+Independent feature for viewing character from different angles. Uses **actual direction-specific images** instead of CSS transforms.
+
+**ViewDirection:** `'front' | 'side' | 'half-side' | 'back'`
+
+**How it works:**
+- Parts with `directionVariants` field provide direction-specific SVG paths
+- `resolveLayersForDirection()` checks `directionVariants[direction]` first
+- If no direction image exists, falls back to default variant + `positionOverrides`
+- Face parts (eyes, nose, mouth, face2) use `positionOverrides` for offset shifting
+- Back direction: hides facial features + applies horizontal flip
+- Side/half-side: NO CSS transforms — actual turnaround images are rendered directly
+
+**Asset structure:**
+```
+public/assets/parts/body/turnaround/01_side.svg
+public/assets/parts/body/turnaround/01_halfside.svg
+```
+
+**Key files:**
+- `src/types/character.ts` — `ViewDirection` type, `directionVariants` on PartDefinition
+- `src/lib/utils/constants.ts` — `HIDDEN_CATEGORIES_BY_DIRECTION`, `DIRECTION_CSS_TRANSFORMS`, `ALL_DIRECTIONS`
+- `src/components/maker/DirectionPreview.tsx` — Single direction preview
+- `src/components/maker/DirectionGrid.tsx` — 2x2 grid of all 4 directions
+
+### Posture System (Pose Variants)
+
+Independent feature for changing body pose. Uses the existing **variant key** system.
+
+**PoseId:** `'standing' | 'sitting' | 'lying' | 'bowing'`
+
+**How it works:**
+- Body parts have `variesByPose: true` and pose-specific variant keys
+- `buildVariantKey()` generates keys like `"sitting/default"`
+- `resolveVariantKey()` has a fallback chain: exact → standing → neutral → first available
+- Posture and turnaround are **independent** — no combined direction+pose variants needed
+
+**Asset structure:**
+```
+public/assets/parts/body/posture/01_sit.svg
+public/assets/parts/body/posture/01_lay.svg
+public/assets/parts/body/posture/01_bow.svg
+```
 
 ### Edit Mode (Symmetric Transform System)
 
-Allows users to adjust position (X/Y) and rotation of **ears, arms, legs** with automatic symmetric mirroring — both sides are controlled simultaneously.
+Allows users to adjust position (X/Y) and rotation of **ears** with automatic symmetric mirroring.
 
 **Symmetry logic:**
-- X axis: Mirrored (left +X → right -X) — maintains symmetric distance from center
-- Y axis: Synchronized (left Y = right Y) — same vertical direction
-- Rotation: Mirrored (left +rotate → right -rotate) — symmetric angle
+- X axis: Mirrored (left +X → right -X)
+- Y axis: Synchronized (left Y = right Y)
+- Rotation: Mirrored (left +rotate → right -rotate)
 
 **Key files:**
-- `src/types/character.ts` — `SymmetricTransform`, `PartTransforms` types
-- `src/lib/utils/constants.ts` — `OFFSET_LIMIT` (±200), `ROTATION_LIMIT` (±30°), `EDITABLE_CATEGORIES`
-- `src/stores/character-store.ts` — `partTransforms` state, `setSymmetricTransform(categoryId, updates)`, `resetPartTransform(categoryId)`
-- `src/components/maker/EditModeModal.tsx` — Fullscreen modal with category tabs (귀/팔/다리), 3 sliders (X, Y, 회전)
-
-**Data flow:**
-```
-EditModeModal (slider change)
-  → setSymmetricTransform(categoryId, { x?, y?, rotate? })
-  → store.partTransforms updated (single SymmetricTransform per category)
-  → resolveLayers() derives mirrored left/right ResolvedLayers
-  → CharacterPreview renders with CSS clip-path + rotate transform
-  → renderToBlob() exports with canvas clip + ctx.rotate()
-```
-
-**Left/Right split (clip-path approach):**
-- Same image rendered twice — once clipped to left 50%, once to right 50%
-- CSS: `clip-path: inset(0 50% 0 0)` (left) / `inset(0 0 0 50%)` (right)
-- Canvas: `ctx.rect(0, 0, w/2, h)` + `ctx.clip()` (left) / `ctx.rect(w/2, 0, w/2, h)` (right)
-- Each half gets its own mirrored transform (offset + rotation)
-
-**Transform types:**
-```typescript
-interface SymmetricTransform { x: number; y: number; rotate: number }
-type PartTransforms = Partial<Record<CategoryId, SymmetricTransform>>
-```
+- `src/lib/utils/constants.ts` — `OFFSET_LIMIT` (±20), `ROTATION_LIMIT` (±10°), `EDITABLE_CATEGORIES`
+- `src/components/maker/EditModeModal.tsx` — Fullscreen modal with category tabs, sliders
 
 ### Asset Path Handling
 - `withBasePath()` utility (`src/lib/utils/asset-path.ts`) handles GitHub Pages deployment
@@ -97,47 +116,45 @@ type PartTransforms = Partial<Record<CategoryId, SymmetricTransform>>
 - Assets are stored in `public/assets/parts/{category}/{number}.{svg|png}`
 
 ### Component Structure
-- `src/app/maker/page.tsx`: Main maker page with two-panel layout (preview + part selector) + edit mode button/modal
-- `src/components/maker/CharacterPreview.tsx`: Real-time preview with clip-path + CSS transform for sided layers
-- `src/components/maker/EditModeModal.tsx`: Fullscreen edit modal (귀/팔/다리 only, symmetric X/Y/Rotation sliders)
+- `src/app/maker/page.tsx`: Main maker page with two-panel layout (preview + part selector)
+- `src/components/maker/CharacterPreview.tsx`: Real-time preview with clip-path for sided layers
+- `src/components/maker/DirectionPreview.tsx`: Direction-specific preview (turnaround)
+- `src/components/maker/DirectionGrid.tsx`: 2x2 grid of all 4 direction previews
+- `src/components/maker/EditModeModal.tsx`: Fullscreen edit modal (귀/입/코/눈, symmetric sliders)
 - `src/components/maker/PartCategoryTabs.tsx`: Category tab bar for part selection
 - `src/components/maker/PartGrid.tsx` + `PartThumbnail.tsx`: Thumbnail grid for part selection
-- `src/components/maker/ExportButton.tsx`: PNG export with transform support
+- `src/components/maker/ExportButton.tsx`: PNG export with direction support
 - `src/components/maker/RandomizeButton.tsx`: Random part selection
 - `src/components/ui/`: Reusable UI primitives (Button, Card)
 - `src/components/layout/`: Layout components (Header, Footer)
 
 ### Type System
 All character-related types are centralized in `src/types/character.ts`:
-- `CategoryId`: Union type for all body part categories
-- `SelectedParts`: Partial record mapping categories to selected part IDs
-- `SymmetricTransform`: Position (x, y) + rotation for symmetric editing
-- `PartTransforms`: Partial record mapping CategoryId → SymmetricTransform
-- `ResolvedLayer`: Final layer with categoryId, layerIndex, svgPath, offsetX/Y, rotate, side?
-- `PartDefinition`: Defines a part with variants and metadata
+- `CategoryId`: Union type for body part categories (body, body2, face, face2, eyes, nose, mouth, ears, ear2)
+- `ViewDirection`: `'front' | 'side' | 'half-side' | 'back'`
+- `PoseId`: `'standing' | 'sitting' | 'lying' | 'bowing'`
+- `PartDefinition`: Part with variants, directionVariants, positionOverrides
+- `ResolvedLayer`: Final layer with categoryId, layerIndex, svgPath, offsets, side?
 
 ### Constants (`src/lib/utils/constants.ts`)
-- `CANVAS_WIDTH` / `CANVAS_HEIGHT`: Base canvas dimensions (703.09 × 1029.04)
-- `CANVAS_EXPORT_SCALE`: 2x for retina export
-- `DEFAULT_POSE_ID` / `DEFAULT_EXPRESSION_ID`: Hardcoded MVP values
-- `OFFSET_LIMIT`: ±200px max offset for part transforms
-- `ROTATION_LIMIT`: ±30° max rotation for part transforms
-- `EDITABLE_CATEGORIES`: `['ears', 'arms', 'legs']` — categories that support edit mode
+- `CANVAS_WIDTH` / `CANVAS_HEIGHT`: Base canvas dimensions (1080 × 1080)
+- `CANVAS_EXPORT_SCALE`: 1x (1080px default)
+- `EDITABLE_CATEGORIES`: `['ears', 'mouth', 'nose', 'eyes']`
+- `COLORABLE_CATEGORIES`: `['body', 'body2', 'face', 'face2', 'ears', 'nose']`
 
 ## Key Design Patterns
 
-### Pose & Expression System (MVP)
-Currently hardcoded to single values:
-- Pose: `'standing'` only
-- Expression: `'neutral'` only
-
-Future extensions would add more poses/expressions and update the variant resolution logic.
+### Turnaround vs Posture (Independent Features)
+- **Turnaround**: Direction-specific images via `directionVariants` on PartDefinition
+- **Posture**: Pose-specific body via `variants` keys (e.g., `"sitting/default"`)
+- These features do NOT combine — no direction+pose combo variants needed
 
 ### Part Variants
 Parts support multiple variants through the `variants` object:
-- Expression-varying parts (eyes, mouth): Use `"{poseId}/{expressionId}"` keys
-- Static parts: Use `"{poseId}/default"` keys
-- This allows future expansion to multiple expressions without refactoring
+- Expression-varying parts (eyes, mouth): Use `"any/{expressionId}"` keys
+- Pose-varying parts (body): Use `"{poseId}/default"` keys
+- Static parts: Use `"any/default"` keys
+- Fallback chain ensures graceful degradation when specific variants are missing
 
 ### Static Export Configuration
 The Next.js config is optimized for static hosting:
@@ -151,7 +168,9 @@ The Next.js config is optimized for static hosting:
 1. Add image files to `public/assets/parts/{category}/`
 2. Update `src/data/parts.ts` with new PartDefinition entries
 3. Ensure `thumbnail` and all `variants` paths use `withBasePath()` helper
-4. Follow existing ID numbering convention (e.g., '01', '02', '03')
+4. For turnaround: add `directionVariants` with direction-specific SVG paths
+5. For posture: add pose variant keys to `variants` object
+6. Follow existing ID numbering convention (e.g., '01', '02', '03')
 
 ## Adding New Categories
 
@@ -159,14 +178,6 @@ The Next.js config is optimized for static hosting:
 2. Add Category definition to `CATEGORIES` array in `src/data/categories.ts` with appropriate `layerIndex`
 3. Add parts array to `PARTS` object in `src/data/parts.ts`
 4. If the category should support edit mode, add its id to `EDITABLE_CATEGORIES` in `src/lib/utils/constants.ts`
-
-## Making a Category Editable (Edit Mode)
-
-To add a new category to the edit mode system:
-1. Add the CategoryId to `EDITABLE_CATEGORIES` array in `src/lib/utils/constants.ts`
-2. The layer resolver will automatically split it into left/right layers
-3. The EditModeModal will show it as a tab
-4. Both preview (CSS clip-path) and export (canvas clip) handle it automatically
 
 ## Tech Stack Details
 

@@ -1,4 +1,4 @@
-import type { ResolvedLayer } from '@/types/character';
+import type { ResolvedLayer, ViewDirection } from '@/types/character';
 import { CANVAS_EXPORT_SCALE } from '@/lib/utils/constants';
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -88,6 +88,53 @@ export async function renderToBlob(
       drawImageContain(ctx, img, canvasWidth, canvasHeight);
     }
   }
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('Canvas toBlob returned null'));
+      },
+      'image/png'
+    );
+  });
+}
+
+/**
+ * Render layers with direction-specific handling.
+ * - side/half-side: Layers already contain direction-specific images via directionVariants,
+ *   so no canvas-level transform needed — render directly.
+ * - back: Apply horizontal flip after rendering.
+ * Layers should already be filtered/resolved for the direction before calling.
+ */
+export async function renderToBlobWithDirection(
+  layers: ResolvedLayer[],
+  canvasWidth: number,
+  canvasHeight: number,
+  scale: number = CANVAS_EXPORT_SCALE,
+  direction: ViewDirection = 'front'
+): Promise<Blob> {
+  // side/half-side use actual direction images — render directly like front
+  if (direction === 'front' || direction === 'side' || direction === 'half-side') {
+    return renderToBlob(layers, canvasWidth, canvasHeight, scale);
+  }
+
+  // back: render normally then flip horizontally
+  const pw = Math.ceil(canvasWidth * scale);
+  const ph = Math.ceil(canvasHeight * scale);
+
+  const tempBlob = await renderToBlob(layers, canvasWidth, canvasHeight, scale);
+  const tempImg = await loadImage(URL.createObjectURL(tempBlob));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = pw;
+  canvas.height = ph;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Could not get 2d context');
+
+  ctx.translate(pw, 0);
+  ctx.scale(-1, 1);
+  ctx.drawImage(tempImg, 0, 0);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(

@@ -1,18 +1,26 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useCharacterStore } from '@/stores/character-store';
-import { resolveLayers } from '@/lib/composer/layer-order';
+import { resolveLayersForDirection } from '@/lib/composer/layer-order';
 import { applyColorsToLayers } from '@/lib/color/apply-colors';
-import type { PoseId, ExpressionId, ResolvedLayer } from '@/types/character';
-import { CANVAS_WIDTH, CANVAS_HEIGHT, DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID } from '@/lib/utils/constants';
+import type { ResolvedLayer, ViewDirection } from '@/types/character';
+import {
+  CANVAS_WIDTH,
+  CANVAS_HEIGHT,
+  DEFAULT_POSE_ID,
+  DEFAULT_EXPRESSION_ID,
+  DIRECTION_CSS_TRANSFORMS,
+  DIRECTION_LABELS,
+} from '@/lib/utils/constants';
 import { cn } from '@/lib/utils/cn';
 
-interface CharacterPreviewProps {
+interface DirectionPreviewProps {
+  direction: ViewDirection;
+  isSelected?: boolean;
+  onClick?: () => void;
   className?: string;
-  poseId?: PoseId;
-  expressionId?: ExpressionId;
 }
 
 function buildTransformStyle(
@@ -29,34 +37,16 @@ function buildTransformStyle(
   return parts.length > 0 ? parts.join(' ') : undefined;
 }
 
-export function CharacterPreview({ className, poseId, expressionId }: CharacterPreviewProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [previewWidth, setPreviewWidth] = useState<number | null>(null);
+export function DirectionPreview({ direction, isSelected, onClick, className }: DirectionPreviewProps) {
   const [coloredLayers, setColoredLayers] = useState<ResolvedLayer[]>([]);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const el = containerRef.current;
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) return;
-      const width = entry.contentRect.width;
-      if (width > 0) setPreviewWidth(width);
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
   const partColors = useCharacterStore((s) => s.partColors);
 
-  const effectivePoseId = poseId ?? DEFAULT_POSE_ID;
-  const effectiveExpressionId = expressionId ?? DEFAULT_EXPRESSION_ID;
-
   const baseLayers = useMemo(
-    () => resolveLayers(selectedParts, effectivePoseId, effectiveExpressionId, partTransforms),
-    [selectedParts, effectivePoseId, effectiveExpressionId, partTransforms]
+    () => resolveLayersForDirection(selectedParts, DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID, partTransforms, direction),
+    [selectedParts, partTransforms, direction]
   );
 
   useEffect(() => {
@@ -76,25 +66,24 @@ export function CharacterPreview({ className, poseId, expressionId }: CharacterP
     };
   }, [baseLayers, partColors]);
 
-  const hasAnySelection = coloredLayers.length > 0;
-  const scale = useMemo(() => {
-    if (!previewWidth) return 1;
-    return previewWidth / CANVAS_WIDTH;
-  }, [previewWidth]);
+  const cssTransform = DIRECTION_CSS_TRANSFORMS[direction];
 
   return (
-    <div className="bg-gray-50 rounded-2xl border border-gray-200 py-16">
+    <div
+      onClick={onClick}
+      className={cn(
+        'cursor-pointer rounded-xl border-2 bg-gray-50 p-2 transition-colors',
+        isSelected ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-gray-300',
+        className
+      )}
+    >
       <div
-        className={cn('relative overflow-hidden', className)}
-        style={{ aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}` }}
-        ref={containerRef}
+        className="relative overflow-hidden"
+        style={{
+          aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}`,
+          transform: cssTransform,
+        }}
       >
-        {!hasAnySelection && (
-          <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
-            파츠를 선택하세요
-          </div>
-        )}
-
         {coloredLayers.map((layer) => {
           const clipPath =
             layer.side === 'left' ? 'inset(0 50% 0 0)' : layer.side === 'right' ? 'inset(0 0 0 50%)' : undefined;
@@ -110,15 +99,17 @@ export function CharacterPreview({ className, poseId, expressionId }: CharacterP
               style={{
                 zIndex: layer.layerIndex,
                 clipPath,
-                transform: buildTransformStyle(layer, scale),
+                transform: buildTransformStyle(layer, 1),
                 transformOrigin: '50% 50%',
               }}
-              sizes="(max-width: 768px) 100vw, 400px"
-              priority
+              sizes="300px"
             />
           );
         })}
       </div>
+      <p className="mt-1 text-center text-sm font-medium text-gray-600">
+        {DIRECTION_LABELS[direction]}
+      </p>
     </div>
   );
 }

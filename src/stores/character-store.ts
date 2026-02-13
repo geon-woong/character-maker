@@ -2,10 +2,11 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTransform, PartColors, PartColor } from '@/types/character';
+import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTransform, PartColors, PartColor, ViewDirection, PoseId, ExpressionId } from '@/types/character';
 import { DEFAULT_SYMMETRIC_TRANSFORM, DEFAULT_STROKE_COLOR } from '@/types/character';
 import { PARTS } from '@/data/parts';
 import { CATEGORIES } from '@/data/categories';
+import { ACTION_MAP } from '@/data/poses-expressions';
 import { OFFSET_LIMIT, ROTATION_LIMIT, COLORABLE_CATEGORIES, BULK_COLOR_EXCLUDED, getExclusiveSiblings } from '@/lib/utils/constants';
 
 function clampSymmetricTransform(t: SymmetricTransform): SymmetricTransform {
@@ -22,6 +23,10 @@ interface CharacterState {
   activeCategoryId: CategoryId;
   partTransforms: PartTransforms;
   partColors: PartColors;
+  activeDirection: ViewDirection;
+  activePoseId: PoseId;
+  activeExpressionId: ExpressionId;
+  activeActionId: string | null;
 
   setStep: (step: MakerStep) => void;
   selectPart: (categoryId: CategoryId, partId: string) => void;
@@ -35,6 +40,10 @@ interface CharacterState {
   randomizeAll: () => void;
   resetCharacter: () => void;
   isComplete: () => boolean;
+  setActiveDirection: (direction: ViewDirection) => void;
+  setPose: (poseId: PoseId) => void;
+  setExpression: (expressionId: ExpressionId) => void;
+  setAction: (actionId: string) => void;
 }
 
 export const useCharacterStore = create<CharacterState>()(
@@ -45,6 +54,10 @@ export const useCharacterStore = create<CharacterState>()(
       activeCategoryId: 'body',
       partTransforms: {},
       partColors: {},
+      activeDirection: 'front',
+      activePoseId: 'standing',
+      activeExpressionId: 'neutral',
+      activeActionId: null,
 
       setStep: (step) => set({ step }),
 
@@ -145,7 +158,27 @@ export const useCharacterStore = create<CharacterState>()(
           activeCategoryId: 'body',
           partTransforms: {},
           partColors: {},
+          activeDirection: 'front',
+          activePoseId: 'standing',
+          activeExpressionId: 'neutral',
+          activeActionId: null,
         }),
+
+      setActiveDirection: (direction) => set({ activeDirection: direction }),
+
+      setPose: (poseId) => set({ activePoseId: poseId, activeActionId: null }),
+
+      setExpression: (expressionId) => set({ activeExpressionId: expressionId, activeActionId: null }),
+
+      setAction: (actionId) => {
+        const action = ACTION_MAP.get(actionId);
+        if (!action) return;
+        set({
+          activePoseId: action.poseId,
+          activeExpressionId: action.expressionId,
+          activeActionId: actionId,
+        });
+      },
 
       isComplete: () => {
         const { selectedParts } = get();
@@ -159,7 +192,7 @@ export const useCharacterStore = create<CharacterState>()(
     }),
     {
       name: 'character-maker-state',
-      version: 5,
+      version: 8,
       storage: createJSONStorage(() => sessionStorage),
       migrate: (persistedState, version) => {
         const state = persistedState as Record<string, unknown>;
@@ -183,6 +216,48 @@ export const useCharacterStore = create<CharacterState>()(
           return { ...state, partColors: newColors };
         }
         // v4→v5: globalStroke removed, no migration needed
+        if (version < 6) {
+          return { ...state, activeDirection: 'front' };
+        }
+        if (version < 7) {
+          return {
+            ...state,
+            activePoseId: 'standing',
+            activeExpressionId: 'neutral',
+            activeActionId: null,
+          };
+        }
+        if (version < 8) {
+          // v7→v8: Remove arms/legs, update ViewDirection, migrate PoseId
+          const sp = (state.selectedParts ?? {}) as Record<string, unknown>;
+          delete sp['arms'];
+          delete sp['legs'];
+          const pt = (state.partTransforms ?? {}) as Record<string, unknown>;
+          delete pt['arms'];
+          delete pt['legs'];
+          const pc = (state.partColors ?? {}) as Record<string, unknown>;
+          delete pc['arms'];
+          delete pc['legs'];
+          // Migrate direction: side-left/side-right → side
+          const dir = state.activeDirection as string;
+          const newDir = (dir === 'side-left' || dir === 'side-right') ? 'side' : dir;
+          // Migrate pose: walking/running/jumping → standing
+          const pose = state.activePoseId as string;
+          const validPoses = ['standing', 'sitting', 'lying', 'bowing'];
+          const newPose = validPoses.includes(pose) ? pose : 'standing';
+          const cat = state.activeCategoryId as string;
+          const newCat = (cat === 'arms' || cat === 'legs') ? 'body' : cat;
+          return {
+            ...state,
+            selectedParts: sp,
+            partTransforms: pt,
+            partColors: pc,
+            activeDirection: newDir,
+            activePoseId: newPose,
+            activeCategoryId: newCat,
+            activeActionId: null,
+          };
+        }
         return state as unknown as CharacterState;
       },
       partialize: (state) => ({
@@ -191,6 +266,10 @@ export const useCharacterStore = create<CharacterState>()(
         activeCategoryId: state.activeCategoryId,
         partTransforms: state.partTransforms,
         partColors: state.partColors,
+        activeDirection: state.activeDirection,
+        activePoseId: state.activePoseId,
+        activeExpressionId: state.activeExpressionId,
+        activeActionId: state.activeActionId,
       }),
     }
   )

@@ -11,8 +11,6 @@ import { cn } from '@/lib/utils/cn';
 import type { ResolvedLayer } from '@/types/character';
 import { DEFAULT_SYMMETRIC_TRANSFORM } from '@/types/character';
 import {
-  DEFAULT_POSE_ID,
-  DEFAULT_EXPRESSION_ID,
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
   OFFSET_LIMIT,
@@ -44,6 +42,8 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
   const partColors = useCharacterStore((s) => s.partColors);
+  const activePoseId = useCharacterStore((s) => s.activePoseId);
+  const activeExpressionId = useCharacterStore((s) => s.activeExpressionId);
   const setSymmetricTransform = useCharacterStore((s) => s.setSymmetricTransform);
   const resetPartTransform = useCharacterStore((s) => s.resetPartTransform);
 
@@ -55,8 +55,8 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
   const hasSelection = selectedParts[editCategoryId] != null;
 
   const baseLayers = useMemo(
-    () => resolveLayers(selectedParts, DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID, partTransforms),
-    [selectedParts, partTransforms]
+    () => resolveLayers(selectedParts, activePoseId, activeExpressionId, partTransforms),
+    [selectedParts, activePoseId, activeExpressionId, partTransforms]
   );
 
   useEffect(() => {

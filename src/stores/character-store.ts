@@ -192,7 +192,7 @@ export const useCharacterStore = create<CharacterState>()(
     }),
     {
       name: 'character-maker-state',
-      version: 7,
+      version: 8,
       storage: createJSONStorage(() => sessionStorage),
       migrate: (persistedState, version) => {
         const state = persistedState as Record<string, unknown>;
@@ -224,6 +224,37 @@ export const useCharacterStore = create<CharacterState>()(
             ...state,
             activePoseId: 'standing',
             activeExpressionId: 'neutral',
+            activeActionId: null,
+          };
+        }
+        if (version < 8) {
+          // v7→v8: Remove arms/legs, update ViewDirection, migrate PoseId
+          const sp = (state.selectedParts ?? {}) as Record<string, unknown>;
+          delete sp['arms'];
+          delete sp['legs'];
+          const pt = (state.partTransforms ?? {}) as Record<string, unknown>;
+          delete pt['arms'];
+          delete pt['legs'];
+          const pc = (state.partColors ?? {}) as Record<string, unknown>;
+          delete pc['arms'];
+          delete pc['legs'];
+          // Migrate direction: side-left/side-right → side
+          const dir = state.activeDirection as string;
+          const newDir = (dir === 'side-left' || dir === 'side-right') ? 'side' : dir;
+          // Migrate pose: walking/running/jumping → standing
+          const pose = state.activePoseId as string;
+          const validPoses = ['standing', 'sitting', 'lying', 'bowing'];
+          const newPose = validPoses.includes(pose) ? pose : 'standing';
+          const cat = state.activeCategoryId as string;
+          const newCat = (cat === 'arms' || cat === 'legs') ? 'body' : cat;
+          return {
+            ...state,
+            selectedParts: sp,
+            partTransforms: pt,
+            partColors: pc,
+            activeDirection: newDir,
+            activePoseId: newPose,
+            activeCategoryId: newCat,
             activeActionId: null,
           };
         }

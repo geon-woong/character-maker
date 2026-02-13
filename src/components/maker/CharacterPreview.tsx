@@ -5,12 +5,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useCharacterStore } from '@/stores/character-store';
 import { resolveLayers } from '@/lib/composer/layer-order';
 import { applyColorsToLayers } from '@/lib/color/apply-colors';
-import type { ResolvedLayer } from '@/types/character';
-import { CANVAS_WIDTH, CANVAS_HEIGHT } from '@/lib/utils/constants';
+import type { PoseId, ExpressionId, ResolvedLayer } from '@/types/character';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID } from '@/lib/utils/constants';
 import { cn } from '@/lib/utils/cn';
 
 interface CharacterPreviewProps {
   className?: string;
+  poseId?: PoseId;
+  expressionId?: ExpressionId;
 }
 
 function buildTransformStyle(
@@ -27,7 +29,7 @@ function buildTransformStyle(
   return parts.length > 0 ? parts.join(' ') : undefined;
 }
 
-export function CharacterPreview({ className }: CharacterPreviewProps) {
+export function CharacterPreview({ className, poseId, expressionId }: CharacterPreviewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [previewWidth, setPreviewWidth] = useState<number | null>(null);
   const [coloredLayers, setColoredLayers] = useState<ResolvedLayer[]>([]);
@@ -48,12 +50,13 @@ export function CharacterPreview({ className }: CharacterPreviewProps) {
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
   const partColors = useCharacterStore((s) => s.partColors);
-  const activePoseId = useCharacterStore((s) => s.activePoseId);
-  const activeExpressionId = useCharacterStore((s) => s.activeExpressionId);
+
+  const effectivePoseId = poseId ?? DEFAULT_POSE_ID;
+  const effectiveExpressionId = expressionId ?? DEFAULT_EXPRESSION_ID;
 
   const baseLayers = useMemo(
-    () => resolveLayers(selectedParts, activePoseId, activeExpressionId, partTransforms),
-    [selectedParts, activePoseId, activeExpressionId, partTransforms]
+    () => resolveLayers(selectedParts, effectivePoseId, effectiveExpressionId, partTransforms),
+    [selectedParts, effectivePoseId, effectiveExpressionId, partTransforms]
   );
 
   useEffect(() => {
@@ -98,7 +101,7 @@ export function CharacterPreview({ className }: CharacterPreviewProps) {
 
           return (
             <Image
-              key={`${layer.categoryId}-${layer.side ?? 'full'}`}
+              key={`${layer.categoryId}-${layer.layerIndex}-${layer.side ?? 'full'}`}
               src={layer.svgPath}
               alt={layer.categoryId}
               fill

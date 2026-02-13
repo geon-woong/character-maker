@@ -74,7 +74,7 @@ export default function MakerPage() {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_400px]">
           {/* Preview */}
           <div className="flex flex-col gap-4 lg:order-2">
-            <CharacterPreview className="w-full lg:sticky lg:top-20" />
+            <CharacterPreview className="w-full lg:sticky lg:top-20" poseId={activePoseId} expressionId={activeExpressionId} />
             <p className="text-center text-sm text-gray-500">
               현재: <span className="font-medium text-gray-700">{poseName}</span> / <span className="font-medium text-gray-700">{expressionName}</span>
             </p>

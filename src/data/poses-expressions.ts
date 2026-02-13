@@ -7,11 +7,9 @@ const p = (path: string) => withBasePath(path);
 
 export const POSES: readonly Pose[] = [
   { id: 'standing', name: '서있기', thumbnail: p('/assets/poses/standing.svg'), category: 'basic' },
-  { id: 'walking',  name: '걷기',   thumbnail: p('/assets/poses/walking.svg'),  category: 'basic' },
-  { id: 'running',  name: '뛰기',   thumbnail: p('/assets/poses/running.svg'),  category: 'basic' },
   { id: 'sitting',  name: '앉기',   thumbnail: p('/assets/poses/sitting.svg'),  category: 'basic' },
   { id: 'lying',    name: '눕기',   thumbnail: p('/assets/poses/lying.svg'),    category: 'basic' },
-  { id: 'jumping',  name: '점프',   thumbnail: p('/assets/poses/jumping.svg'),  category: 'special' },
+  { id: 'bowing',   name: '인사',   thumbnail: p('/assets/poses/bowing.svg'),   category: 'basic' },
 ];
 
 // ===== Expressions =====
@@ -28,22 +26,19 @@ export const EXPRESSIONS: readonly Expression[] = [
 
 export const ACTIONS: readonly Action[] = [
   // 기본 동작
-  { id: 'standing-neutral', name: '기본 서있기',   poseId: 'standing', expressionId: 'neutral', thumbnail: p('/assets/actions/standing-neutral.svg'), category: 'basic' },
-  { id: 'walking-neutral',  name: '걷기',         poseId: 'walking',  expressionId: 'neutral', thumbnail: p('/assets/actions/walking-neutral.svg'),  category: 'basic' },
-  { id: 'running-neutral',  name: '뛰기',         poseId: 'running',  expressionId: 'neutral', thumbnail: p('/assets/actions/running-neutral.svg'),  category: 'basic' },
-  { id: 'sitting-neutral',  name: '앉기',         poseId: 'sitting',  expressionId: 'neutral', thumbnail: p('/assets/actions/sitting-neutral.svg'),  category: 'basic' },
-  { id: 'lying-neutral',    name: '눕기',         poseId: 'lying',    expressionId: 'neutral', thumbnail: p('/assets/actions/lying-neutral.svg'),    category: 'basic' },
+  { id: 'standing-neutral', name: '기본 서있기', poseId: 'standing', expressionId: 'neutral', thumbnail: p('/assets/actions/standing-neutral.svg'), category: 'basic' },
+  { id: 'sitting-neutral',  name: '앉기',       poseId: 'sitting',  expressionId: 'neutral', thumbnail: p('/assets/actions/sitting-neutral.svg'),  category: 'basic' },
+  { id: 'lying-neutral',    name: '눕기',       poseId: 'lying',    expressionId: 'neutral', thumbnail: p('/assets/actions/lying-neutral.svg'),    category: 'basic' },
+  { id: 'bowing-neutral',   name: '인사',       poseId: 'bowing',   expressionId: 'neutral', thumbnail: p('/assets/actions/bowing-neutral.svg'),   category: 'basic' },
 
   // 감정 동작
-  { id: 'standing-happy',     name: '기쁨',     poseId: 'standing', expressionId: 'happy',     thumbnail: p('/assets/actions/standing-happy.svg'),     category: 'emotion' },
-  { id: 'standing-sad',       name: '슬픔',     poseId: 'standing', expressionId: 'sad',       thumbnail: p('/assets/actions/standing-sad.svg'),       category: 'emotion' },
-  { id: 'standing-angry',     name: '화남',     poseId: 'standing', expressionId: 'angry',     thumbnail: p('/assets/actions/standing-angry.svg'),     category: 'emotion' },
-  { id: 'standing-surprised', name: '놀람',     poseId: 'standing', expressionId: 'surprised', thumbnail: p('/assets/actions/standing-surprised.svg'), category: 'emotion' },
+  // { id: 'standing-happy',     name: '기쁨', poseId: 'standing', expressionId: 'happy',     thumbnail: p('/assets/actions/standing-happy.svg'),     category: 'emotion' },
+  // { id: 'standing-sad',       name: '슬픔', poseId: 'standing', expressionId: 'sad',       thumbnail: p('/assets/actions/standing-sad.svg'),       category: 'emotion' },
+  // { id: 'standing-angry',     name: '화남', poseId: 'standing', expressionId: 'angry',     thumbnail: p('/assets/actions/standing-angry.svg'),     category: 'emotion' },
+  // { id: 'standing-surprised', name: '놀람', poseId: 'standing', expressionId: 'surprised', thumbnail: p('/assets/actions/standing-surprised.svg'), category: 'emotion' },
 
   // 특수 동작
-  { id: 'jumping-happy', name: '기쁨 점프',   poseId: 'jumping', expressionId: 'happy', thumbnail: p('/assets/actions/jumping-happy.svg'), category: 'special' },
-  { id: 'sitting-sad',   name: '슬픈 앉기',   poseId: 'sitting', expressionId: 'sad',   thumbnail: p('/assets/actions/sitting-sad.svg'),   category: 'special' },
-  { id: 'running-happy',  name: '즐거운 뛰기', poseId: 'running', expressionId: 'happy', thumbnail: p('/assets/actions/running-happy.svg'), category: 'special' },
+  // { id: 'sitting-sad', name: '슬픈 앉기', poseId: 'sitting', expressionId: 'sad', thumbnail: p('/assets/actions/sitting-sad.svg'), category: 'special' },
 ];
 
 // ===== Lookup Maps =====

@@ -8,9 +8,7 @@ export type CategoryId =
   | 'nose'
   | 'mouth'
   | 'ears'
-  | 'ear2'
-  | 'arms'
-  | 'legs';
+  | 'ear2';
 
 export interface Category {
   readonly id: CategoryId;
@@ -20,7 +18,7 @@ export interface Category {
 }
 
 // ===== Pose & Expression =====
-export type PoseId = 'standing' | 'walking' | 'running' | 'sitting' | 'lying' | 'jumping';
+export type PoseId = 'standing' | 'sitting' | 'lying' | 'bowing';
 export type ExpressionId = 'neutral' | 'happy' | 'sad' | 'angry' | 'surprised';
 
 export type PoseCategory = 'basic' | 'special';
@@ -51,8 +49,21 @@ export interface Action {
 }
 
 // ===== Part =====
+
+/** Extra layer rendered at a different z-index (for composite parts) */
+export interface ExtraLayer {
+  readonly svgPath: string;
+  readonly layerIndex: number;
+}
+
+/** Variant value with extra layers for composite rendering */
+export interface VariantData {
+  readonly svgPath: string;
+  readonly extraLayers: readonly ExtraLayer[];
+}
+
 export interface PartVariants {
-  readonly [poseAndExpression: string]: string; // e.g. "standing/neutral" → "/assets/..."
+  readonly [poseAndExpression: string]: string | VariantData; // e.g. "standing/neutral" → "/assets/..." or VariantData
 }
 
 /** Design-time position override for a part (additive to user transforms) */
@@ -69,7 +80,9 @@ export interface PartDefinition {
   readonly variesByExpression: boolean;
   readonly variesByPose: boolean;
   readonly variants: PartVariants;
-  /** Position overrides keyed by ViewDirection (e.g. "side-left") or variant key (e.g. "side-standing/default") */
+  /** Direction-specific SVG paths for turnaround (independent of pose/expression variants) */
+  readonly directionVariants?: Partial<Record<ViewDirection, string>>;
+  /** Position overrides keyed by ViewDirection (e.g. "side") or variant key */
   readonly positionOverrides?: Record<string, PartPosition>;
 }
 
@@ -79,7 +92,7 @@ export type SelectedParts = Partial<Record<CategoryId, string>>; // categoryId �
 export type MakerStep = 'parts' | 'action' | 'direction' | 'export';
 
 // ===== View Direction =====
-export type ViewDirection = 'front' | 'back' | 'side-left' | 'side-right';
+export type ViewDirection = 'front' | 'side' | 'half-side' | 'back';
 
 // ===== Part Transform =====
 export type PartSide = 'left' | 'right';
@@ -112,4 +125,5 @@ export interface ResolvedLayer {
   readonly offsetY: number;
   readonly rotate: number;
   readonly side?: PartSide;
+  readonly isExtra?: boolean;
 }

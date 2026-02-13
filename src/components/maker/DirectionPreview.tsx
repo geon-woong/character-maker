@@ -9,6 +9,8 @@ import type { ResolvedLayer, ViewDirection } from '@/types/character';
 import {
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
+  DEFAULT_POSE_ID,
+  DEFAULT_EXPRESSION_ID,
   DIRECTION_CSS_TRANSFORMS,
   DIRECTION_LABELS,
 } from '@/lib/utils/constants';
@@ -41,12 +43,10 @@ export function DirectionPreview({ direction, isSelected, onClick, className }: 
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
   const partColors = useCharacterStore((s) => s.partColors);
-  const activePoseId = useCharacterStore((s) => s.activePoseId);
-  const activeExpressionId = useCharacterStore((s) => s.activeExpressionId);
 
   const baseLayers = useMemo(
-    () => resolveLayersForDirection(selectedParts, activePoseId, activeExpressionId, partTransforms, direction),
-    [selectedParts, activePoseId, activeExpressionId, partTransforms, direction]
+    () => resolveLayersForDirection(selectedParts, DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID, partTransforms, direction),
+    [selectedParts, partTransforms, direction]
   );
 
   useEffect(() => {
@@ -90,7 +90,7 @@ export function DirectionPreview({ direction, isSelected, onClick, className }: 
 
           return (
             <Image
-              key={`${layer.categoryId}-${layer.side ?? 'full'}`}
+              key={`${layer.categoryId}-${layer.layerIndex}-${layer.side ?? 'full'}`}
               src={layer.svgPath}
               alt={layer.categoryId}
               fill

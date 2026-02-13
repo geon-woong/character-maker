@@ -7,13 +7,13 @@ export const DEFAULT_POSE_ID = 'standing' as const;
 export const DEFAULT_EXPRESSION_ID = 'neutral' as const;
 export const OFFSET_LIMIT = 20;
 export const ROTATION_LIMIT = 10;
-export const EDITABLE_CATEGORIES: readonly CategoryId[] = ['ears', 'arms', 'legs', 'mouth', 'nose', 'eyes'];
+export const EDITABLE_CATEGORIES: readonly CategoryId[] = ['ears', 'mouth', 'nose', 'eyes'];
 
 /** 편집모드에서 X축 이동이 잠긴 카테고리 (중앙 정렬 부위) */
 export const X_LOCKED_CATEGORIES: readonly CategoryId[] = ['mouth', 'nose'];
 
 /** Categories that show the color palette UI */
-export const COLORABLE_CATEGORIES: readonly CategoryId[] = ['body', 'body2', 'face', 'face2', 'arms', 'legs', 'ears', 'nose'];
+export const COLORABLE_CATEGORIES: readonly CategoryId[] = ['body', 'body2', 'face', 'face2', 'ears', 'nose'];
 
 /** Default fill color for eyes (fixed, not user-changeable) */
 export const DEFAULT_EYES_COLOR = '#040000';
@@ -49,25 +49,25 @@ export const TRANSFORM_PARENT: Partial<Record<CategoryId, CategoryId>> = {
 export const HIDDEN_CATEGORIES_BY_DIRECTION: Record<ViewDirection, readonly CategoryId[]> = {
   front: [],
   back: ['eyes', 'nose', 'mouth', 'face2'],
-  'side-left': [],
-  'side-right': [],
+  side: [],
+  'half-side': [],
 };
 
-/** CSS container transform per direction */
+/** CSS container transform per direction (side/half-side use actual images, no CSS transform) */
 export const DIRECTION_CSS_TRANSFORMS: Record<ViewDirection, string> = {
   front: 'none',
   back: 'scaleX(-1)',
-  'side-left': 'perspective(800px) rotateY(-30deg)',
-  'side-right': 'perspective(800px) rotateY(30deg)',
+  side: 'none',
+  'half-side': 'none',
 };
 
 /** Direction labels (Korean) */
 export const DIRECTION_LABELS: Record<ViewDirection, string> = {
   front: '정면',
   back: '뒷면',
-  'side-left': '왼쪽',
-  'side-right': '오른쪽',
+  side: '측면',
+  'half-side': '반측면',
 };
 
 /** All view directions in display order */
-export const ALL_DIRECTIONS: readonly ViewDirection[] = ['front', 'side-left', 'side-right', 'back'];
+export const ALL_DIRECTIONS: readonly ViewDirection[] = ['front', 'half-side', 'side', 'back'];

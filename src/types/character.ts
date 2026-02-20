@@ -73,6 +73,12 @@ export interface PartPosition {
   readonly rotate?: number;
 }
 
+/** Per-side offset for symmetric (left-only image) categories */
+export interface SideOffset {
+  readonly left?: PartPosition;
+  readonly right?: PartPosition;
+}
+
 export interface PartDefinition {
   readonly id: string;
   readonly name: string;
@@ -84,6 +90,8 @@ export interface PartDefinition {
   readonly directionVariants?: Partial<Record<ViewDirection, string>>;
   /** Position overrides keyed by ViewDirection (e.g. "side") or variant key */
   readonly positionOverrides?: Record<string, PartPosition>;
+  /** Per-side offsets for symmetric categories, keyed by ViewDirection */
+  readonly sideOffsets?: Partial<Record<ViewDirection, SideOffset>>;
 }
 
 // ===== Selection State =====
@@ -116,6 +124,20 @@ export type PartColors = Partial<Record<CategoryId, PartColor>>;
 export const DEFAULT_FILL_COLOR = '#ffffff';
 export const DEFAULT_STROKE_COLOR = '#231815';
 
+// ===== Stroke Settings (global, character-wide) =====
+export type StrokeWidthId = 'thin' | 'default' | 'thick' | 'extra-thick';
+export type StrokeTextureId = 'default' | 'rough';
+
+export interface StrokeSettings {
+  readonly widthId: StrokeWidthId;
+  readonly textureId: StrokeTextureId;
+}
+
+export const DEFAULT_STROKE_SETTINGS: StrokeSettings = {
+  widthId: 'default',
+  textureId: 'default',
+};
+
 // ===== Resolved Layer (for preview/export) =====
 export interface ResolvedLayer {
   readonly categoryId: CategoryId;
@@ -125,5 +147,6 @@ export interface ResolvedLayer {
   readonly offsetY: number;
   readonly rotate: number;
   readonly side?: PartSide;
+  readonly flipX?: boolean;
   readonly isExtra?: boolean;
 }

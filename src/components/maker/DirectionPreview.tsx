@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useCharacterStore } from '@/stores/character-store';
 import { resolveLayersForDirection } from '@/lib/composer/layer-order';
 import { applyColorsToLayers } from '@/lib/color/apply-colors';
@@ -39,10 +39,31 @@ function buildTransformStyle(
 
 export function DirectionPreview({ direction, isSelected, onClick, className }: DirectionPreviewProps) {
   const [coloredLayers, setColoredLayers] = useState<ResolvedLayer[]>([]);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = useState<number | null>(null);
 
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
   const partColors = useCharacterStore((s) => s.partColors);
+  const strokeSettings = useCharacterStore((s) => s.strokeSettings);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const el = containerRef.current;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      const width = entry.contentRect.width;
+      if (width > 0) setContainerWidth(width);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const scale = useMemo(() => {
+    if (!containerWidth) return 1;
+    return containerWidth / CANVAS_WIDTH;
+  }, [containerWidth]);
 
   const baseLayers = useMemo(
     () => resolveLayersForDirection(selectedParts, DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID, partTransforms, direction),
@@ -57,14 +78,14 @@ export function DirectionPreview({ direction, isSelected, onClick, className }: 
       return;
     }
 
-    applyColorsToLayers(baseLayers, partColors).then((result) => {
+    applyColorsToLayers(baseLayers, partColors, strokeSettings).then((result) => {
       if (!cancelled) setColoredLayers(result);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [baseLayers, partColors]);
+  }, [baseLayers, partColors, strokeSettings]);
 
   const cssTransform = DIRECTION_CSS_TRANSFORMS[direction];
 
@@ -78,6 +99,7 @@ export function DirectionPreview({ direction, isSelected, onClick, className }: 
       )}
     >
       <div
+        ref={containerRef}
         className="relative overflow-hidden"
         style={{
           aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}`,
@@ -85,12 +107,37 @@ export function DirectionPreview({ direction, isSelected, onClick, className }: 
         }}
       >
         {coloredLayers.map((layer) => {
-          const clipPath =
-            layer.side === 'left' ? 'inset(0 50% 0 0)' : layer.side === 'right' ? 'inset(0 0 0 50%)' : undefined;
+          const key = `${layer.categoryId}-${layer.layerIndex}-${layer.side ?? 'full'}`;
+
+          if (layer.side === 'right') {
+            return (
+              <div
+                key={key}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  zIndex: layer.layerIndex,
+                  clipPath: 'inset(0 0 0 50%)',
+                  transform: buildTransformStyle(layer, scale),
+                  transformOrigin: '50% 50%',
+                }}
+              >
+                <Image
+                  src={layer.svgPath}
+                  alt={layer.categoryId}
+                  fill
+                  unoptimized
+                  className="object-contain"
+                  style={{ transform: 'scaleX(-1)', transformOrigin: '50% 50%' }}
+                  sizes="300px"
+                />
+              </div>
+            );
+          }
 
           return (
             <Image
-              key={`${layer.categoryId}-${layer.layerIndex}-${layer.side ?? 'full'}`}
+              key={key}
               src={layer.svgPath}
               alt={layer.categoryId}
               fill
@@ -98,8 +145,8 @@ export function DirectionPreview({ direction, isSelected, onClick, className }: 
               className="object-contain"
               style={{
                 zIndex: layer.layerIndex,
-                clipPath,
-                transform: buildTransformStyle(layer, 1),
+                clipPath: layer.side === 'left' ? 'inset(0 50% 0 0)' : undefined,
+                transform: buildTransformStyle(layer, scale),
                 transformOrigin: '50% 50%',
               }}
               sizes="300px"

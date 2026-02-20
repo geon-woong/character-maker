@@ -1,9 +1,15 @@
 /**
  * Replace all fill color values in SVG text.
- * Handles both `fill: none` and `fill: #hexcolor` in CSS style blocks.
- * Does NOT touch stroke values.
+ * @param preserveNone - If true, preserves `fill: none` (stroke-only paths).
+ *   Use for body SVGs where stroke-only paths should not be filled.
  */
-export function replaceFillColor(svgText: string, newFill: string): string {
+export function replaceFillColor(svgText: string, newFill: string, preserveNone = false): string {
+  if (preserveNone) {
+    return svgText.replace(
+      /(fill:\s*)(#[0-9a-fA-F]{3,8})/gi,
+      `$1${newFill}`
+    );
+  }
   return svgText.replace(
     /(fill:\s*)(none|#[0-9a-fA-F]{3,8})/gi,
     `$1${newFill}`

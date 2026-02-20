@@ -14,25 +14,30 @@ const DEFAULT_PART_COLOR: PartColor = { fill: DEFAULT_FILL_COLOR, stroke: DEFAUL
  * - COLORABLE_CATEGORIES: user-selected or defaults
  * - others: defaults
  */
+/** Categories whose SVGs use `fill: none` for stroke-only paths */
+const PRESERVE_NONE_CATEGORIES: readonly string[] = ['body', 'body2'];
+
 function resolveColor(
   categoryId: string,
   partColors: PartColors
-): { fill: string; stroke: string; skipStroke: boolean } {
+): { fill: string; stroke: string; skipStroke: boolean; preserveNone: boolean } {
+  const preserveNone = PRESERVE_NONE_CATEGORIES.includes(categoryId);
+
   if (categoryId === 'eyes') {
-    return { fill: DEFAULT_EYES_COLOR, stroke: DEFAULT_STROKE_COLOR, skipStroke: true };
+    return { fill: DEFAULT_EYES_COLOR, stroke: DEFAULT_STROKE_COLOR, skipStroke: true, preserveNone };
   }
 
   if (categoryId === 'mouth') {
     const bodyColor = partColors[MOUTH_FOLLOWS] ?? DEFAULT_PART_COLOR;
-    return { fill: bodyColor.fill, stroke: DEFAULT_STROKE_COLOR, skipStroke: false };
+    return { fill: bodyColor.fill, stroke: DEFAULT_STROKE_COLOR, skipStroke: false, preserveNone };
   }
 
   if (COLORABLE_CATEGORIES.includes(categoryId as never)) {
     const color = partColors[categoryId as keyof PartColors] ?? DEFAULT_PART_COLOR;
-    return { fill: color.fill, stroke: color.stroke, skipStroke: false };
+    return { fill: color.fill, stroke: color.stroke, skipStroke: false, preserveNone };
   }
 
-  return { fill: DEFAULT_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, skipStroke: false };
+  return { fill: DEFAULT_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, skipStroke: false, preserveNone };
 }
 
 /**
@@ -47,13 +52,13 @@ export async function applyColorsToLayers(
 ): Promise<ResolvedLayer[]> {
   return Promise.all(
     layers.map(async (layer) => {
-      const { fill, stroke, skipStroke } = resolveColor(layer.categoryId, partColors);
+      const { fill, stroke, skipStroke, preserveNone } = resolveColor(layer.categoryId, partColors);
 
       try {
         let svgText = await loadSvgText(layer.svgPath);
 
         // 1. Apply fill color
-        svgText = replaceFillColor(svgText, fill);
+        svgText = replaceFillColor(svgText, fill, preserveNone);
 
         // 2. Apply stroke color
         if (!skipStroke) {

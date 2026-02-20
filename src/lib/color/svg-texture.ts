@@ -4,7 +4,7 @@ import type { StrokeTextureId } from '@/types/character';
  * SVG filter for rough/hand-drawn stroke texture.
  * Uses feTurbulence + feDisplacementMap to subtly distort paths.
  */
-const ROUGH_FILTER_DEF = `<filter id="rough-stroke" x="-5%" y="-5%" width="110%" height="110%">
+const ROUGH_FILTER_DEF = `<filter id="rough-stroke" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
   <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="3" seed="42" result="noise"/>
   <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
 </filter>`;
@@ -36,13 +36,28 @@ export function applyStrokeTexture(svgText: string, textureId: StrokeTextureId):
     }
   }
 
-  // Apply filter to root SVG element via style rule
+  // Apply filter to direct children (not root SVG) to prevent edge artifacts on mobile
   const styleCloseIndex = result.indexOf('</style>');
   if (styleCloseIndex !== -1) {
     result =
       result.slice(0, styleCloseIndex) +
-      '\nsvg { filter: url(#rough-stroke); }\n' +
+      '\nsvg > * { filter: url(#rough-stroke); }\n' +
       result.slice(styleCloseIndex);
+  } else {
+    // No <style> block: wrap all content after <defs> in a filtered <g>
+    const defsEndIndex = result.indexOf('</defs>');
+    if (defsEndIndex !== -1) {
+      const afterDefs = defsEndIndex + '</defs>'.length;
+      const svgCloseIndex = result.lastIndexOf('</svg>');
+      if (svgCloseIndex !== -1) {
+        result =
+          result.slice(0, afterDefs) +
+          '<g filter="url(#rough-stroke)">' +
+          result.slice(afterDefs, svgCloseIndex) +
+          '</g>' +
+          result.slice(svgCloseIndex);
+      }
+    }
   }
 
   return result;

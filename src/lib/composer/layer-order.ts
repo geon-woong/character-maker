@@ -289,11 +289,16 @@ export function resolveLayersForDirection(
 
   // Filter specific sides per direction (e.g. hide left ear/eye in side view)
   const hiddenSides = HIDDEN_SIDES_BY_DIRECTION[direction];
-  const filtered = categoryFiltered.filter((layer) => {
+  const sideFiltered = categoryFiltered.filter((layer) => {
     if (!layer.side) return true;
     const hiddenSide = hiddenSides[layer.categoryId];
     return hiddenSide !== layer.side;
   });
+
+  // Hide extra layers for ears in back view
+  const filtered = direction === 'back'
+    ? sideFiltered.filter((layer) => !(layer.categoryId === 'ears' && layer.isExtra))
+    : sideFiltered;
 
   const variantKey = `${poseId}/default`;
 

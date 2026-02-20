@@ -43,6 +43,7 @@ export function DirectionPreview({ direction, isSelected, onClick, className }: 
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
   const partColors = useCharacterStore((s) => s.partColors);
+  const strokeSettings = useCharacterStore((s) => s.strokeSettings);
 
   const baseLayers = useMemo(
     () => resolveLayersForDirection(selectedParts, DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID, partTransforms, direction),
@@ -57,14 +58,14 @@ export function DirectionPreview({ direction, isSelected, onClick, className }: 
       return;
     }
 
-    applyColorsToLayers(baseLayers, partColors).then((result) => {
+    applyColorsToLayers(baseLayers, partColors, strokeSettings).then((result) => {
       if (!cancelled) setColoredLayers(result);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [baseLayers, partColors]);
+  }, [baseLayers, partColors, strokeSettings]);
 
   const cssTransform = DIRECTION_CSS_TRANSFORMS[direction];
 

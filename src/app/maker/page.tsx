@@ -9,6 +9,7 @@ import { RandomizeButton } from '@/components/maker/RandomizeButton';
 import { ExportButton } from '@/components/maker/ExportButton';
 import { EditModeModal } from '@/components/maker/EditModeModal';
 import { ColorPalette } from '@/components/maker/ColorPalette';
+import { StrokeSettingsPanel } from '@/components/maker/StrokeSettingsPanel';
 import { DirectionGrid } from '@/components/maker/DirectionGrid';
 import { ActionPresetGrid } from '@/components/maker/ActionPresetGrid';
 import { PoseSelector } from '@/components/maker/PoseSelector';
@@ -127,6 +128,7 @@ export default function MakerPage() {
           <PartCategoryTabs />
           <PartGrid />
           <ColorPalette />
+          <StrokeSettingsPanel />
         </div>
       </div>
 

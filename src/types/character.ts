@@ -116,6 +116,20 @@ export type PartColors = Partial<Record<CategoryId, PartColor>>;
 export const DEFAULT_FILL_COLOR = '#ffffff';
 export const DEFAULT_STROKE_COLOR = '#231815';
 
+// ===== Stroke Settings (global, character-wide) =====
+export type StrokeWidthId = 'thin' | 'default' | 'thick' | 'extra-thick';
+export type StrokeTextureId = 'default' | 'rough';
+
+export interface StrokeSettings {
+  readonly widthId: StrokeWidthId;
+  readonly textureId: StrokeTextureId;
+}
+
+export const DEFAULT_STROKE_SETTINGS: StrokeSettings = {
+  widthId: 'default',
+  textureId: 'default',
+};
+
 // ===== Resolved Layer (for preview/export) =====
 export interface ResolvedLayer {
   readonly categoryId: CategoryId;

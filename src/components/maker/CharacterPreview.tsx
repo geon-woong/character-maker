@@ -50,6 +50,7 @@ export function CharacterPreview({ className, poseId, expressionId }: CharacterP
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
   const partColors = useCharacterStore((s) => s.partColors);
+  const strokeSettings = useCharacterStore((s) => s.strokeSettings);
 
   const effectivePoseId = poseId ?? DEFAULT_POSE_ID;
   const effectiveExpressionId = expressionId ?? DEFAULT_EXPRESSION_ID;
@@ -67,14 +68,14 @@ export function CharacterPreview({ className, poseId, expressionId }: CharacterP
       return;
     }
 
-    applyColorsToLayers(baseLayers, partColors).then((result) => {
+    applyColorsToLayers(baseLayers, partColors, strokeSettings).then((result) => {
       if (!cancelled) setColoredLayers(result);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [baseLayers, partColors]);
+  }, [baseLayers, partColors, strokeSettings]);
 
   const hasAnySelection = coloredLayers.length > 0;
   const scale = useMemo(() => {

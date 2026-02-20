@@ -41,6 +41,7 @@ export function ExportButton() {
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
   const partColors = useCharacterStore((s) => s.partColors);
+  const strokeSettings = useCharacterStore((s) => s.strokeSettings);
   const isComplete = useCharacterStore((s) => s.isComplete);
   const activeDirection = useCharacterStore((s) => s.activeDirection);
   const activePoseId = useCharacterStore((s) => s.activePoseId);
@@ -66,7 +67,7 @@ export function ExportButton() {
         partTransforms,
         activeDirection
       );
-      const layers = await applyColorsToLayers(baseLayers, partColors);
+      const layers = await applyColorsToLayers(baseLayers, partColors, strokeSettings);
 
       const blob = await renderToBlobWithDirection(
         layers,

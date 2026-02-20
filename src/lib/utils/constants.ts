@@ -1,4 +1,4 @@
-import type { CategoryId, ViewDirection } from '@/types/character';
+import type { CategoryId, ViewDirection, StrokeWidthId, StrokeTextureId } from '@/types/character';
 
 export const CANVAS_WIDTH = 1080;
 export const CANVAS_HEIGHT = 1080;
@@ -23,6 +23,20 @@ export const MOUTH_FOLLOWS: CategoryId = 'face';
 
 /** 일괄 색상 변경에서 제외되는 카테고리 */
 export const BULK_COLOR_EXCLUDED: readonly CategoryId[] = ['eyes', 'nose', 'mouth'];
+
+// ===== Stroke Settings =====
+
+export const STROKE_WIDTH_PRESETS: Record<StrokeWidthId, { label: string; value: number }> = {
+  'thin': { label: '얇은 선', value: 10 },
+  'default': { label: '기본 선', value: 15 },
+  'thick': { label: '굵은 선', value: 20 },
+  'extra-thick': { label: '아주 굵은 선', value: 25 },
+};
+
+export const STROKE_TEXTURE_PRESETS: Record<StrokeTextureId, { label: string }> = {
+  'default': { label: '기본 선' },
+  'rough': { label: '거친 질감' },
+};
 
 /** Mutually exclusive category groups — selecting one clears others in the same group */
 export const EXCLUSIVE_GROUPS: readonly CategoryId[][] = [];

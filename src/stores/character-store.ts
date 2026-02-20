@@ -2,8 +2,8 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTransform, PartColors, PartColor, ViewDirection, PoseId, ExpressionId } from '@/types/character';
-import { DEFAULT_SYMMETRIC_TRANSFORM, DEFAULT_STROKE_COLOR } from '@/types/character';
+import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTransform, PartColors, PartColor, ViewDirection, PoseId, ExpressionId, StrokeSettings, StrokeWidthId, StrokeTextureId } from '@/types/character';
+import { DEFAULT_SYMMETRIC_TRANSFORM, DEFAULT_STROKE_COLOR, DEFAULT_STROKE_SETTINGS } from '@/types/character';
 import { PARTS } from '@/data/parts';
 import { CATEGORIES } from '@/data/categories';
 import { ACTION_MAP } from '@/data/poses-expressions';
@@ -27,6 +27,7 @@ interface CharacterState {
   activePoseId: PoseId;
   activeExpressionId: ExpressionId;
   activeActionId: string | null;
+  strokeSettings: StrokeSettings;
 
   setStep: (step: MakerStep) => void;
   selectPart: (categoryId: CategoryId, partId: string) => void;
@@ -44,6 +45,9 @@ interface CharacterState {
   setPose: (poseId: PoseId) => void;
   setExpression: (expressionId: ExpressionId) => void;
   setAction: (actionId: string) => void;
+  setStrokeWidth: (widthId: StrokeWidthId) => void;
+  setStrokeTexture: (textureId: StrokeTextureId) => void;
+  resetStrokeSettings: () => void;
 }
 
 export const useCharacterStore = create<CharacterState>()(
@@ -58,6 +62,7 @@ export const useCharacterStore = create<CharacterState>()(
       activePoseId: 'standing',
       activeExpressionId: 'neutral',
       activeActionId: null,
+      strokeSettings: DEFAULT_STROKE_SETTINGS,
 
       setStep: (step) => set({ step }),
 
@@ -148,7 +153,7 @@ export const useCharacterStore = create<CharacterState>()(
             }
           }
         }
-        set({ selectedParts: randomized, partTransforms: {}, partColors: {} });
+        set({ selectedParts: randomized, partTransforms: {}, partColors: {}, strokeSettings: DEFAULT_STROKE_SETTINGS });
       },
 
       resetCharacter: () =>
@@ -162,6 +167,7 @@ export const useCharacterStore = create<CharacterState>()(
           activePoseId: 'standing',
           activeExpressionId: 'neutral',
           activeActionId: null,
+          strokeSettings: DEFAULT_STROKE_SETTINGS,
         }),
 
       setActiveDirection: (direction) => set({ activeDirection: direction }),
@@ -180,6 +186,19 @@ export const useCharacterStore = create<CharacterState>()(
         });
       },
 
+      setStrokeWidth: (widthId) =>
+        set((state) => ({
+          strokeSettings: { ...state.strokeSettings, widthId },
+        })),
+
+      setStrokeTexture: (textureId) =>
+        set((state) => ({
+          strokeSettings: { ...state.strokeSettings, textureId },
+        })),
+
+      resetStrokeSettings: () =>
+        set({ strokeSettings: DEFAULT_STROKE_SETTINGS }),
+
       isComplete: () => {
         const { selectedParts } = get();
         return CATEGORIES
@@ -192,7 +211,7 @@ export const useCharacterStore = create<CharacterState>()(
     }),
     {
       name: 'character-maker-state',
-      version: 8,
+      version: 9,
       storage: createJSONStorage(() => sessionStorage),
       migrate: (persistedState, version) => {
         const state = persistedState as Record<string, unknown>;
@@ -256,7 +275,11 @@ export const useCharacterStore = create<CharacterState>()(
             activePoseId: newPose,
             activeCategoryId: newCat,
             activeActionId: null,
+            strokeSettings: DEFAULT_STROKE_SETTINGS,
           };
+        }
+        if (version < 9) {
+          return { ...state, strokeSettings: DEFAULT_STROKE_SETTINGS };
         }
         return state as unknown as CharacterState;
       },
@@ -270,6 +293,7 @@ export const useCharacterStore = create<CharacterState>()(
         activePoseId: state.activePoseId,
         activeExpressionId: state.activeExpressionId,
         activeActionId: state.activeActionId,
+        strokeSettings: state.strokeSettings,
       }),
     }
   )

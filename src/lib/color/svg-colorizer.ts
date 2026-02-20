@@ -21,6 +21,16 @@ export function replaceStrokeColor(svgText: string, newStroke: string): string {
 }
 
 /**
+ * Replace all stroke-width values in SVG CSS style blocks.
+ */
+export function replaceStrokeWidth(svgText: string, newWidthPx: number): string {
+  return svgText.replace(
+    /(stroke-width:\s*)(\d+(?:\.\d+)?px)/gi,
+    `$1${newWidthPx}px`
+  );
+}
+
+/**
  * Convert SVG text to a base64 Data URI for use in <img src> and Canvas drawImage.
  */
 export function svgToDataUri(svgText: string): string {

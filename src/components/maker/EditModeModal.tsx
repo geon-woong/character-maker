@@ -42,6 +42,7 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
   const partColors = useCharacterStore((s) => s.partColors);
+  const strokeSettings = useCharacterStore((s) => s.strokeSettings);
   const activePoseId = useCharacterStore((s) => s.activePoseId);
   const activeExpressionId = useCharacterStore((s) => s.activeExpressionId);
   const setSymmetricTransform = useCharacterStore((s) => s.setSymmetricTransform);
@@ -67,14 +68,14 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
       return;
     }
 
-    applyColorsToLayers(baseLayers, partColors).then((result) => {
+    applyColorsToLayers(baseLayers, partColors, strokeSettings).then((result) => {
       if (!cancelled) setColoredLayers(result);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [baseLayers, partColors]);
+  }, [baseLayers, partColors, strokeSettings]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {

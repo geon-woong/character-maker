@@ -156,16 +156,16 @@ export const PARTS: Record<string, PartDefinition[]> = {
       },
     },
   ],
-  body2: [
-    {
-      id: '01',
-      name: '몸2 01',
-      thumbnail: p('/assets/parts/body2/01.svg'),
-      variesByExpression: false,
-      variesByPose: true,
-      variants: { 'standing/default': p('/assets/parts/body2/01.svg') },
-    },
-  ],
+  // body2: [
+  //   {
+  //     id: '01',
+  //     name: '몸2 01',
+  //     thumbnail: p('/assets/parts/body2/01.svg'),
+  //     variesByExpression: false,
+  //     variesByPose: true,
+  //     variants: { 'standing/default': p('/assets/parts/body2/01.svg') },
+  //   },
+  // ],
   face2: [
     {
       id: '01',
@@ -231,12 +231,7 @@ export const PARTS: Record<string, PartDefinition[]> = {
       variesByExpression: false,
       variesByPose: false,
       variants: {
-        'any/default': {
-          svgPath: p('/assets/parts/ears/04.svg'),
-          extraLayers: [
-            { svgPath: p('/assets/parts/ears/extra/04.svg'), layerIndex: 10 },
-          ],
-        },
+        'any/default': p('/assets/parts/ears/04.svg')
       },
     },
   ],

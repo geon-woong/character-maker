@@ -86,12 +86,37 @@ export function DirectionPreview({ direction, isSelected, onClick, className }: 
         }}
       >
         {coloredLayers.map((layer) => {
-          const clipPath =
-            layer.side === 'left' ? 'inset(0 50% 0 0)' : layer.side === 'right' ? 'inset(0 0 0 50%)' : undefined;
+          const key = `${layer.categoryId}-${layer.layerIndex}-${layer.side ?? 'full'}`;
+
+          if (layer.side === 'right') {
+            return (
+              <div
+                key={key}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  zIndex: layer.layerIndex,
+                  clipPath: 'inset(0 0 0 50%)',
+                  transform: buildTransformStyle(layer, 1),
+                  transformOrigin: '50% 50%',
+                }}
+              >
+                <Image
+                  src={layer.svgPath}
+                  alt={layer.categoryId}
+                  fill
+                  unoptimized
+                  className="object-contain"
+                  style={{ transform: 'scaleX(-1)', transformOrigin: '50% 50%' }}
+                  sizes="300px"
+                />
+              </div>
+            );
+          }
 
           return (
             <Image
-              key={`${layer.categoryId}-${layer.layerIndex}-${layer.side ?? 'full'}`}
+              key={key}
               src={layer.svgPath}
               alt={layer.categoryId}
               fill
@@ -99,7 +124,7 @@ export function DirectionPreview({ direction, isSelected, onClick, className }: 
               className="object-contain"
               style={{
                 zIndex: layer.layerIndex,
-                clipPath,
+                clipPath: layer.side === 'left' ? 'inset(0 50% 0 0)' : undefined,
                 transform: buildTransformStyle(layer, 1),
                 transformOrigin: '50% 50%',
               }}

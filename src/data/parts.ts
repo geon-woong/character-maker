@@ -86,9 +86,9 @@ export const PARTS: Record<string, PartDefinition[]> = {
       variesByExpression: true,
       variesByPose: false,
       variants: { 'any/neutral': p('/assets/parts/eyes/01.svg') },
-      positionOverrides: {
-        side: { offsetX: -80 },
-        'half-side': { offsetX: -40 },
+      sideOffsets: {
+        side: { left: { offsetX: -80 }, right: { offsetX: -80 } },
+        'half-side': { left: { offsetX: -40 }, right: { offsetX: -40 } },
       },
     },
     {
@@ -98,9 +98,9 @@ export const PARTS: Record<string, PartDefinition[]> = {
       variesByExpression: true,
       variesByPose: false,
       variants: { 'any/neutral': p('/assets/parts/eyes/02.svg') },
-      positionOverrides: {
-        side: { offsetX: -80 },
-        'half-side': { offsetX: -40 },
+      sideOffsets: {
+        side: { left: { offsetX: -80 }, right: { offsetX: -80 } },
+        'half-side': { left: { offsetX: -40 }, right: { offsetX: -40 } },
       },
     },
   ],
@@ -138,9 +138,9 @@ export const PARTS: Record<string, PartDefinition[]> = {
       variesByExpression: true,
       variesByPose: false,
       variants: { 'any/neutral': p('/assets/parts/mouth/01.svg') },
-      positionOverrides: {
-        side: { offsetX: -80 },
-        'half-side': { offsetX: -40 },
+      sideOffsets: {
+        side: { left: { offsetX: -80 }, right: { offsetX: -80 } },
+        'half-side': { left: { offsetX: -40 }, right: { offsetX: -40 } },
       },
     },
     {
@@ -150,9 +150,9 @@ export const PARTS: Record<string, PartDefinition[]> = {
       variesByExpression: true,
       variesByPose: false,
       variants: { 'any/neutral': p('/assets/parts/mouth/02.svg') },
-      positionOverrides: {
-        side: { offsetX: -80 },
-        'half-side': { offsetX: -40 },
+      sideOffsets: {
+        side: { left: { offsetX: -80 }, right: { offsetX: -80 } },
+        'half-side': { left: { offsetX: -40 }, right: { offsetX: -40 } },
       },
     },
   ],
@@ -174,9 +174,9 @@ export const PARTS: Record<string, PartDefinition[]> = {
       variesByExpression: false,
       variesByPose: false,
       variants: { 'any/default': p('/assets/parts/face2/01.svg') },
-      positionOverrides: {
-        side: { offsetX: -40 },
-        'half-side': { offsetX: -20 },
+      sideOffsets: {
+        side: { left: { offsetX: -40 }, right: { offsetX: -40 } },
+        'half-side': { left: { offsetX: -20 }, right: { offsetX: -20 } },
       },
     },
     {
@@ -186,9 +186,9 @@ export const PARTS: Record<string, PartDefinition[]> = {
       variesByExpression: false,
       variesByPose: false,
       variants: { 'any/default': p('/assets/parts/face2/02.svg') },
-      positionOverrides: {
-        side: { offsetX: -40 },
-        'half-side': { offsetX: -20 },
+      sideOffsets: {
+        side: { left: { offsetX: -40 }, right: { offsetX: -40 } },
+        'half-side': { left: { offsetX: -20 }, right: { offsetX: -20 } },
       },
     },
   ],

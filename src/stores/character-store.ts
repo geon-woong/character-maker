@@ -211,7 +211,7 @@ export const useCharacterStore = create<CharacterState>()(
     }),
     {
       name: 'character-maker-state',
-      version: 9,
+      version: 10,
       storage: createJSONStorage(() => sessionStorage),
       migrate: (persistedState, version) => {
         const state = persistedState as Record<string, unknown>;
@@ -281,6 +281,7 @@ export const useCharacterStore = create<CharacterState>()(
         if (version < 9) {
           return { ...state, strokeSettings: DEFAULT_STROKE_SETTINGS };
         }
+        // v9→v10: symmetric rendering for eyes/mouth/face2, no state changes
         return state as unknown as CharacterState;
       },
       partialize: (state) => ({

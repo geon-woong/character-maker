@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useCharacterStore } from '@/stores/character-store';
-import { resolveLayers } from '@/lib/composer/layer-order';
+import { resolveLayersForDirection } from '@/lib/composer/layer-order';
 import { applyColorsToLayers } from '@/lib/color/apply-colors';
 import type { PoseId, ExpressionId, ResolvedLayer } from '@/types/character';
 import { CANVAS_WIDTH, CANVAS_HEIGHT, DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID } from '@/lib/utils/constants';
@@ -56,7 +56,7 @@ export function CharacterPreview({ className, poseId, expressionId }: CharacterP
   const effectiveExpressionId = expressionId ?? DEFAULT_EXPRESSION_ID;
 
   const baseLayers = useMemo(
-    () => resolveLayers(selectedParts, effectivePoseId, effectiveExpressionId, partTransforms),
+    () => resolveLayersForDirection(selectedParts, effectivePoseId, effectiveExpressionId, partTransforms, 'front'),
     [selectedParts, effectivePoseId, effectiveExpressionId, partTransforms]
   );
 
@@ -97,12 +97,38 @@ export function CharacterPreview({ className, poseId, expressionId }: CharacterP
         )}
 
         {coloredLayers.map((layer) => {
-          const clipPath =
-            layer.side === 'left' ? 'inset(0 50% 0 0)' : layer.side === 'right' ? 'inset(0 0 0 50%)' : undefined;
+          const key = `${layer.categoryId}-${layer.layerIndex}-${layer.side ?? 'full'}`;
+
+          if (layer.side === 'right') {
+            return (
+              <div
+                key={key}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  zIndex: layer.layerIndex,
+                  clipPath: 'inset(0 0 0 50%)',
+                  transform: buildTransformStyle(layer, scale),
+                  transformOrigin: '50% 50%',
+                }}
+              >
+                <Image
+                  src={layer.svgPath}
+                  alt={layer.categoryId}
+                  fill
+                  unoptimized
+                  className="object-contain"
+                  style={{ transform: 'scaleX(-1)', transformOrigin: '50% 50%' }}
+                  sizes="(max-width: 768px) 100vw, 400px"
+                  priority
+                />
+              </div>
+            );
+          }
 
           return (
             <Image
-              key={`${layer.categoryId}-${layer.layerIndex}-${layer.side ?? 'full'}`}
+              key={key}
               src={layer.svgPath}
               alt={layer.categoryId}
               fill
@@ -110,7 +136,7 @@ export function CharacterPreview({ className, poseId, expressionId }: CharacterP
               className="object-contain"
               style={{
                 zIndex: layer.layerIndex,
-                clipPath,
+                clipPath: layer.side === 'left' ? 'inset(0 50% 0 0)' : undefined,
                 transform: buildTransformStyle(layer, scale),
                 transformOrigin: '50% 50%',
               }}

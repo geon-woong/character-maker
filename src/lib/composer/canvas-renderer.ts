@@ -62,6 +62,7 @@ export async function renderToBlob(
 
     if (layer.side) {
       ctx.save();
+
       if (hasTransform) {
         ctx.translate(canvasWidth / 2 + layer.offsetX, canvasHeight / 2 + layer.offsetY);
         const rotateRad = (layer.rotate * Math.PI) / 180;
@@ -69,10 +70,17 @@ export async function renderToBlob(
         ctx.translate(-canvasWidth / 2, -canvasHeight / 2);
       }
 
+      // Clip to left or right half
       ctx.beginPath();
       if (layer.side === 'left') ctx.rect(0, 0, canvasWidth / 2, canvasHeight);
       else ctx.rect(canvasWidth / 2, 0, canvasWidth / 2, canvasHeight);
       ctx.clip();
+
+      // Right side: flip horizontally to mirror left-only image content
+      if (layer.flipX) {
+        ctx.translate(canvasWidth, 0);
+        ctx.scale(-1, 1);
+      }
 
       drawImageContain(ctx, img, canvasWidth, canvasHeight);
       ctx.restore();

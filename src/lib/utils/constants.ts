@@ -9,6 +9,9 @@ export const OFFSET_LIMIT = 20;
 export const ROTATION_LIMIT = 10;
 export const EDITABLE_CATEGORIES: readonly CategoryId[] = ['ears', 'mouth', 'nose', 'eyes'];
 
+/** 항상 left/right 쌍으로 분리 렌더링되는 카테고리 (좌측 전용 이미지) */
+export const SYMMETRIC_CATEGORIES: readonly CategoryId[] = ['ears', 'eyes', 'mouth', 'face2'];
+
 /** 편집모드에서 X축 이동이 잠긴 카테고리 (중앙 정렬 부위) */
 export const X_LOCKED_CATEGORIES: readonly CategoryId[] = ['mouth', 'nose'];
 

@@ -6,6 +6,7 @@ import type {
   PartTransforms,
   PartPosition,
   PartDefinition,
+  PartSide,
   ViewDirection,
   CategoryId,
   ExtraLayer,
@@ -13,7 +14,7 @@ import type {
 } from '@/types/character';
 import { CATEGORIES } from '@/data/categories';
 import { PARTS } from '@/data/parts';
-import { EDITABLE_CATEGORIES, TRANSFORM_PARENT, HIDDEN_CATEGORIES_BY_DIRECTION } from '@/lib/utils/constants';
+import { EDITABLE_CATEGORIES, SYMMETRIC_CATEGORIES, TRANSFORM_PARENT, HIDDEN_CATEGORIES_BY_DIRECTION } from '@/lib/utils/constants';
 
 /**
  * Build the variant key for a part based on its variesByPose/variesByExpression flags.
@@ -97,7 +98,8 @@ function parseVariantValue(value: string | VariantData): {
 
 /**
  * Given the current selections, resolve the SVG path for each layer.
- * Editable categories (ears) are split into symmetric left/right layers.
+ * Symmetric categories (ears, eyes, mouth, face2) are always split into left/right layers.
+ * Right-side layers get flipX=true for horizontal mirroring (left-only images).
  * Returns layers sorted by layerIndex (ascending z-order).
  */
 export function resolveLayers(
@@ -125,29 +127,35 @@ export function resolveLayers(
     if (!variantValue) continue;
     const { svgPath, extraLayers } = parseVariantValue(variantValue);
 
+    const isSymmetric = SYMMETRIC_CATEGORIES.includes(category.id);
     const isEditable = EDITABLE_CATEGORIES.includes(category.id);
     const parentId = TRANSFORM_PARENT[category.id];
     const transform = partTransforms?.[category.id] ?? (parentId ? partTransforms?.[parentId] : undefined);
 
-    if (isEditable && transform) {
-      // Symmetric mirroring: X and rotate are inverted for right side
+    if (isSymmetric) {
+      // Always split into left/right for symmetric categories (left-only images)
+      const userX = (isEditable && transform) ? transform.x : 0;
+      const userY = (isEditable && transform) ? transform.y : 0;
+      const userR = (isEditable && transform) ? transform.rotate : 0;
+
       layers.push({
         categoryId: category.id,
         layerIndex: category.layerIndex,
         svgPath,
-        offsetX: transform.x,
-        offsetY: transform.y,
-        rotate: transform.rotate,
+        offsetX: userX,
+        offsetY: userY,
+        rotate: userR,
         side: 'left',
       });
       layers.push({
         categoryId: category.id,
         layerIndex: category.layerIndex,
         svgPath,
-        offsetX: -transform.x,
-        offsetY: transform.y,
-        rotate: -transform.rotate,
+        offsetX: -userX,
+        offsetY: userY,
+        rotate: -userR,
         side: 'right',
+        flipX: true,
       });
     } else {
       layers.push({
@@ -163,14 +171,18 @@ export function resolveLayers(
     // Process extra layers for composite parts
     if (extraLayers) {
       for (const extra of extraLayers) {
-        if (isEditable && transform) {
+        if (isSymmetric) {
+          const userX = (isEditable && transform) ? transform.x : 0;
+          const userY = (isEditable && transform) ? transform.y : 0;
+          const userR = (isEditable && transform) ? transform.rotate : 0;
+
           layers.push({
             categoryId: category.id,
             layerIndex: extra.layerIndex,
             svgPath: extra.svgPath,
-            offsetX: transform.x,
-            offsetY: transform.y,
-            rotate: transform.rotate,
+            offsetX: userX,
+            offsetY: userY,
+            rotate: userR,
             side: 'left',
             isExtra: true,
           });
@@ -178,10 +190,11 @@ export function resolveLayers(
             categoryId: category.id,
             layerIndex: extra.layerIndex,
             svgPath: extra.svgPath,
-            offsetX: -transform.x,
-            offsetY: transform.y,
-            rotate: -transform.rotate,
+            offsetX: -userX,
+            offsetY: userY,
+            rotate: -userR,
             side: 'right',
+            flipX: true,
             isExtra: true,
           });
         } else {
@@ -203,7 +216,7 @@ export function resolveLayers(
 }
 
 /**
- * Look up design-time position override for a part.
+ * Look up design-time position override for a part (non-symmetric categories).
  * Checks direction key first (e.g. "side"), then variant key.
  */
 function getPositionOverride(
@@ -217,6 +230,25 @@ function getPositionOverride(
   const part = categoryParts.find((p) => p.id === partId);
   if (!part?.positionOverrides) return undefined;
   return part.positionOverrides[direction] ?? part.positionOverrides[variantKey];
+}
+
+/**
+ * Look up per-side offset for a symmetric category.
+ * Used for direction/pose-specific left/right independent positioning.
+ */
+function getSideOffset(
+  categoryId: CategoryId,
+  partId: string,
+  direction: ViewDirection,
+  side: PartSide
+): PartPosition | undefined {
+  const categoryParts = PARTS[categoryId];
+  if (!categoryParts) return undefined;
+  const part = categoryParts.find((p) => p.id === partId);
+  if (!part?.sideOffsets) return undefined;
+  const directionOffsets = part.sideOffsets[direction];
+  if (!directionOffsets) return undefined;
+  return directionOffsets[side];
 }
 
 /**
@@ -237,7 +269,8 @@ function getDirectionVariant(
 /**
  * Resolve layers filtered by view direction.
  * - Uses directionVariants when available (turnaround images replace CSS transforms)
- * - Falls back to default variant + positionOverrides for face parts
+ * - Applies sideOffsets for symmetric categories (per-side independent offsets)
+ * - Falls back to positionOverrides for non-symmetric categories (nose, etc.)
  * - Hides facial categories for 'back' direction
  */
 export function resolveLayersForDirection(
@@ -254,32 +287,51 @@ export function resolveLayersForDirection(
     ? allLayers
     : allLayers.filter((layer) => !hiddenCategories.includes(layer.categoryId));
 
-  if (direction === 'front') return filtered;
-
   const variantKey = `${poseId}/default`;
 
   return filtered.map((layer) => {
-    // Extra layers skip direction variant replacement (already purpose-specific SVGs)
     if (layer.isExtra) return layer;
 
     const partId = selectedParts[layer.categoryId];
     if (!partId) return layer;
 
-    // Check for direction-specific image (turnaround)
-    const directionSvg = getDirectionVariant(layer.categoryId, partId, direction);
-    if (directionSvg) {
-      return { ...layer, svgPath: directionSvg };
+    let updated = layer;
+
+    // Direction-specific image replacement (turnaround) — front excluded
+    if (direction !== 'front') {
+      const directionSvg = getDirectionVariant(layer.categoryId, partId, direction);
+      if (directionSvg) {
+        updated = { ...updated, svgPath: directionSvg };
+      }
     }
 
-    // Fall back to position overrides (for face parts like eyes, nose, mouth)
-    const override = getPositionOverride(layer.categoryId, partId, direction, variantKey);
-    if (!override) return layer;
+    // Symmetric categories: apply per-side offsets from sideOffsets
+    if (layer.side) {
+      const offset = getSideOffset(layer.categoryId, partId, direction, layer.side);
+      if (offset) {
+        return {
+          ...updated,
+          offsetX: updated.offsetX + (offset.offsetX ?? 0),
+          offsetY: updated.offsetY + (offset.offsetY ?? 0),
+          rotate: updated.rotate + (offset.rotate ?? 0),
+        };
+      }
+      return updated;
+    }
 
-    return {
-      ...layer,
-      offsetX: layer.offsetX + (override.offsetX ?? 0),
-      offsetY: layer.offsetY + (override.offsetY ?? 0),
-      rotate: layer.rotate + (override.rotate ?? 0),
-    };
+    // Non-symmetric categories: apply positionOverrides — front excluded
+    if (direction !== 'front') {
+      const override = getPositionOverride(layer.categoryId, partId, direction, variantKey);
+      if (override) {
+        return {
+          ...updated,
+          offsetX: updated.offsetX + (override.offsetX ?? 0),
+          offsetY: updated.offsetY + (override.offsetY ?? 0),
+          rotate: updated.rotate + (override.rotate ?? 0),
+        };
+      }
+    }
+
+    return updated;
   });
 }

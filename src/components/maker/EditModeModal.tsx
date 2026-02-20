@@ -4,7 +4,7 @@ import { useEffect, useCallback, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { X, RotateCcw } from 'lucide-react';
 import { useCharacterStore } from '@/stores/character-store';
-import { resolveLayers } from '@/lib/composer/layer-order';
+import { resolveLayersForDirection } from '@/lib/composer/layer-order';
 import { applyColorsToLayers } from '@/lib/color/apply-colors';
 import { CATEGORIES } from '@/data/categories';
 import { cn } from '@/lib/utils/cn';
@@ -56,7 +56,7 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
   const hasSelection = selectedParts[editCategoryId] != null;
 
   const baseLayers = useMemo(
-    () => resolveLayers(selectedParts, activePoseId, activeExpressionId, partTransforms),
+    () => resolveLayersForDirection(selectedParts, activePoseId, activeExpressionId, partTransforms, 'front'),
     [selectedParts, activePoseId, activeExpressionId, partTransforms]
   );
 
@@ -153,15 +153,38 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
             style={{ aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}` }}
           >
             {coloredLayers.map((layer) => {
-              const clipPath = layer.side === 'left'
-                ? 'inset(0 50% 0 0)'
-                : layer.side === 'right'
-                  ? 'inset(0 0 0 50%)'
-                  : undefined;
+              const key = `${layer.categoryId}-${layer.side ?? 'full'}`;
+
+              if (layer.side === 'right') {
+                return (
+                  <div
+                    key={key}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      zIndex: layer.layerIndex,
+                      clipPath: 'inset(0 0 0 50%)',
+                      transform: buildPreviewTransform(layer),
+                      transformOrigin: '50% 50%',
+                    }}
+                  >
+                    <Image
+                      src={layer.svgPath}
+                      alt={layer.categoryId}
+                      fill
+                      unoptimized
+                      className="object-contain"
+                      style={{ transform: 'scaleX(-1)', transformOrigin: '50% 50%' }}
+                      sizes="280px"
+                      priority
+                    />
+                  </div>
+                );
+              }
 
               return (
                 <Image
-                  key={`${layer.categoryId}-${layer.side ?? 'full'}`}
+                  key={key}
                   src={layer.svgPath}
                   alt={layer.categoryId}
                   fill
@@ -169,8 +192,9 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
                   className="object-contain"
                   style={{
                     zIndex: layer.layerIndex,
-                    clipPath,
+                    clipPath: layer.side === 'left' ? 'inset(0 50% 0 0)' : undefined,
                     transform: buildPreviewTransform(layer),
+                    transformOrigin: '50% 50%',
                   }}
                   sizes="280px"
                   priority

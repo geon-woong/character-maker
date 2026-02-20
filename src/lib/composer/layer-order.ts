@@ -14,7 +14,7 @@ import type {
 } from '@/types/character';
 import { CATEGORIES } from '@/data/categories';
 import { PARTS } from '@/data/parts';
-import { EDITABLE_CATEGORIES, SYMMETRIC_CATEGORIES, TRANSFORM_PARENT, HIDDEN_CATEGORIES_BY_DIRECTION } from '@/lib/utils/constants';
+import { EDITABLE_CATEGORIES, SYMMETRIC_CATEGORIES, TRANSFORM_PARENT, HIDDEN_CATEGORIES_BY_DIRECTION, HIDDEN_SIDES_BY_DIRECTION } from '@/lib/utils/constants';
 
 /**
  * Build the variant key for a part based on its variesByPose/variesByExpression flags.
@@ -283,9 +283,17 @@ export function resolveLayersForDirection(
   const allLayers = resolveLayers(selectedParts, poseId, expressionId, partTransforms);
   const hiddenCategories = HIDDEN_CATEGORIES_BY_DIRECTION[direction];
 
-  const filtered = hiddenCategories.length === 0
+  const categoryFiltered = hiddenCategories.length === 0
     ? allLayers
     : allLayers.filter((layer) => !hiddenCategories.includes(layer.categoryId));
+
+  // Filter specific sides per direction (e.g. hide left ear/eye in side view)
+  const hiddenSides = HIDDEN_SIDES_BY_DIRECTION[direction];
+  const filtered = categoryFiltered.filter((layer) => {
+    if (!layer.side) return true;
+    const hiddenSide = hiddenSides[layer.categoryId];
+    return hiddenSide !== layer.side;
+  });
 
   const variantKey = `${poseId}/default`;
 

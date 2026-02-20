@@ -1,4 +1,4 @@
-import type { CategoryId, ViewDirection, StrokeWidthId, StrokeTextureId } from '@/types/character';
+import type { CategoryId, ViewDirection, PartSide, StrokeWidthId, StrokeTextureId } from '@/types/character';
 
 export const CANVAS_WIDTH = 1080;
 export const CANVAS_HEIGHT = 1080;
@@ -68,6 +68,14 @@ export const HIDDEN_CATEGORIES_BY_DIRECTION: Record<ViewDirection, readonly Cate
   back: ['eyes', 'nose', 'mouth', 'face2'],
   side: [],
   'half-side': [],
+};
+
+/** Specific side (left/right) hidden per direction per category */
+export const HIDDEN_SIDES_BY_DIRECTION: Record<ViewDirection, Partial<Record<CategoryId, PartSide>>> = {
+  front: {},
+  back: {},
+  side: { ears: 'left', eyes: 'left', mouth: 'left', face2: 'left' },
+  'half-side': {},
 };
 
 /** CSS container transform per direction (side/half-side use actual images, no CSS transform) */

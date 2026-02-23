@@ -99,50 +99,38 @@ export function CharacterPreview({ className, poseId, expressionId }: CharacterP
         {coloredLayers.map((layer) => {
           const key = `${layer.categoryId}-${layer.layerIndex}-${layer.side ?? 'full'}`;
 
-          if (layer.side === 'right') {
-            return (
-              <div
-                key={key}
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  zIndex: layer.layerIndex,
-                  clipPath: 'inset(0 0 0 50%)',
-                  transform: buildTransformStyle(layer, scale),
-                  transformOrigin: '50% 50%',
-                }}
-              >
-                <Image
-                  src={layer.svgPath}
-                  alt={layer.categoryId}
-                  fill
-                  unoptimized
-                  className="object-contain"
-                  style={{ transform: 'scaleX(-1)', transformOrigin: '50% 50%' }}
-                  sizes="(max-width: 768px) 100vw, 400px"
-                  priority
-                />
-              </div>
-            );
-          }
-
           return (
-            <Image
+            <div
               key={key}
-              src={layer.svgPath}
-              alt={layer.categoryId}
-              fill
-              unoptimized
-              className="object-contain"
               style={{
+                position: 'absolute',
+                inset: 0,
                 zIndex: layer.layerIndex,
-                clipPath: layer.side === 'left' ? 'inset(0 50% 0 0)' : undefined,
+                clipPath:
+                  layer.side === 'right'
+                    ? 'inset(0 0 0 50%)'
+                    : layer.side === 'left'
+                      ? 'inset(0 50% 0 0)'
+                      : undefined,
                 transform: buildTransformStyle(layer, scale),
                 transformOrigin: '50% 50%',
               }}
-              sizes="(max-width: 768px) 100vw, 400px"
-              priority
-            />
+            >
+              <Image
+                src={layer.svgPath}
+                alt={layer.categoryId}
+                fill
+                unoptimized
+                className="object-contain"
+                style={
+                  layer.side === 'right'
+                    ? { transform: 'scaleX(-1)', transformOrigin: '50% 50%' }
+                    : undefined
+                }
+                sizes="(max-width: 768px) 100vw, 400px"
+                priority
+              />
+            </div>
           );
         })}
       </div>

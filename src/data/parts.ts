@@ -1,5 +1,6 @@
 import type { PartDefinition } from '@/types/character';
 import { withBasePath } from '@/lib/utils/asset-path';
+import { LAYER_Z } from '@/lib/utils/constants';
 
 /**
  * All part definitions organized by categoryId -> PartDefinition[]
@@ -27,7 +28,7 @@ export const PARTS: Record<string, PartDefinition[]> = {
         'lying/default': p('/assets/parts/body/posture/01_lay.svg'),
         'bowing/default': {
           svgPath: p('/assets/parts/body/posture/01_bow.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/body/extra/01_bow.svg'), layerIndex: 10 }],
+          extraLayers: [{ svgPath: p('/assets/parts/body/extra/01_bow.svg'), layerIndex: LAYER_Z.bodyExtra }],
         },
       },
       directionVariants: {
@@ -47,7 +48,7 @@ export const PARTS: Record<string, PartDefinition[]> = {
         'lying/default': p('/assets/parts/body/posture/02_lay.svg'),
         'bowing/default': {
           svgPath: p('/assets/parts/body/posture/02_bow.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/body/extra/02_bow.svg'), layerIndex: 10 }],
+          extraLayers: [{ svgPath: p('/assets/parts/body/extra/02_bow.svg'), layerIndex: LAYER_Z.bodyExtra }],
         },
       },
       directionVariants: {
@@ -181,19 +182,19 @@ export const PARTS: Record<string, PartDefinition[]> = {
         'any/neutral': p('/assets/parts/mouth/01.svg'),
         'any/happy': {
           svgPath: p('/assets/parts/mouth/01.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/smile.svg'), layerIndex: 7.5 }],
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/smile.svg'), layerIndex: LAYER_Z.mouthExpression }],
         },
         'any/sad': {
           svgPath: p('/assets/parts/mouth/01.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/sad.svg'), layerIndex: 7.5 }],
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/sad.svg'), layerIndex: LAYER_Z.mouthExpression }],
         },
         'any/angry': {
           svgPath: p('/assets/parts/mouth/01.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/angry.svg'), layerIndex: 7.5 }],
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/angry.svg'), layerIndex: LAYER_Z.mouthExpression }],
         },
         'any/surprised': {
           svgPath: p('/assets/parts/mouth/01.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/teasing.svg'), layerIndex: 7.5 }],
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/teasing.svg'), layerIndex: LAYER_Z.mouthExpression }],
         },
       },
       sideOffsets: {
@@ -211,19 +212,19 @@ export const PARTS: Record<string, PartDefinition[]> = {
         'any/neutral': p('/assets/parts/mouth/02.svg'),
         'any/happy': {
           svgPath: p('/assets/parts/mouth/02.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/smile.svg'), layerIndex: 7.5 }],
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/smile.svg'), layerIndex: LAYER_Z.mouthExpression }],
         },
         'any/sad': {
           svgPath: p('/assets/parts/mouth/02.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/sad.svg'), layerIndex: 7.5 }],
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/sad.svg'), layerIndex: LAYER_Z.mouthExpression }],
         },
         'any/angry': {
           svgPath: p('/assets/parts/mouth/02.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/angry.svg'), layerIndex: 7.5 }],
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/angry.svg'), layerIndex: LAYER_Z.mouthExpression }],
         },
         'any/surprised': {
           svgPath: p('/assets/parts/mouth/02.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/teasing.svg'), layerIndex: 7.5 }],
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/teasing.svg'), layerIndex: LAYER_Z.mouthExpression }],
         },
       },
       sideOffsets: {
@@ -241,19 +242,19 @@ export const PARTS: Record<string, PartDefinition[]> = {
         'any/neutral': p('/assets/parts/mouth/03.svg'),
         'any/happy': {
           svgPath: p('/assets/parts/mouth/03.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/smile.svg'), layerIndex: 7.5 }],
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/smile.svg'), layerIndex: LAYER_Z.mouthExpression }],
         },
         'any/sad': {
           svgPath: p('/assets/parts/mouth/03.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/sad.svg'), layerIndex: 7.5 }],
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/sad.svg'), layerIndex: LAYER_Z.mouthExpression }],
         },
         'any/angry': {
           svgPath: p('/assets/parts/mouth/03.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/angry.svg'), layerIndex: 7.5 }],
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/angry.svg'), layerIndex: LAYER_Z.mouthExpression }],
         },
         'any/surprised': {
           svgPath: p('/assets/parts/mouth/03.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/teasing.svg'), layerIndex: 7.5 }],
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/teasing.svg'), layerIndex: LAYER_Z.mouthExpression }],
         },
       },
       sideOffsets: {
@@ -271,19 +272,19 @@ export const PARTS: Record<string, PartDefinition[]> = {
         'any/neutral': p('/assets/parts/mouth/04.svg'),
         'any/happy': {
           svgPath: p('/assets/parts/mouth/04.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/smile.svg'), layerIndex: 7.5 }],
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/smile.svg'), layerIndex: LAYER_Z.mouthExpression }],
         },
         'any/sad': {
           svgPath: p('/assets/parts/mouth/04.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/sad.svg'), layerIndex: 7.5 }],
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/sad.svg'), layerIndex: LAYER_Z.mouthExpression }],
         },
         'any/angry': {
           svgPath: p('/assets/parts/mouth/04.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/angry.svg'), layerIndex: 7.5 }],
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/angry.svg'), layerIndex: LAYER_Z.mouthExpression }],
         },
         'any/surprised': {
           svgPath: p('/assets/parts/mouth/04.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/teasing.svg'), layerIndex: 7.5 }],
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/teasing.svg'), layerIndex: LAYER_Z.mouthExpression }],
         },
       },
       sideOffsets: {
@@ -354,7 +355,7 @@ export const PARTS: Record<string, PartDefinition[]> = {
       variants: {
         'any/default': {
           svgPath: p('/assets/parts/ears/03.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/ears/extra/03.svg'), layerIndex: 10 }],
+          extraLayers: [{ svgPath: p('/assets/parts/ears/extra/03.svg'), layerIndex: LAYER_Z.earsExtra }],
         },
       },
     },

@@ -1,5 +1,23 @@
 import type { CategoryId, ViewDirection, PartSide, StrokeWidthId, StrokeTextureId } from '@/types/character';
 
+// ===== Layer Z-Order (single source of truth) =====
+// 기본 카테고리 + extra 레이어의 z-order를 한 곳에서 관리
+// DB 이관 시 layer_slots 참조 테이블로 1:1 매핑
+export const LAYER_Z = {
+  // 기본 카테고리 레이어
+  body: 0,
+  ears: 20,
+  face: 30,
+  face2: 50,
+  eyes: 60,
+  mouth: 70,
+  nose: 80,
+  // extra 레이어
+  mouthExpression: 65, // eyes(60)와 mouth(70) 사이
+  bodyExtra: 100,      // 최상단
+  earsExtra: 100,      // 최상단
+} as const;
+
 export const CANVAS_WIDTH = 1080;
 export const CANVAS_HEIGHT = 1080;
 export const CANVAS_EXPORT_SCALE = 1; // 1080px export by default

@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTransform, PartColors, PartColor, ViewDirection, PoseId, ExpressionId, StrokeSettings, StrokeWidthId, StrokeTextureId } from '@/types/character';
-import { DEFAULT_SYMMETRIC_TRANSFORM, DEFAULT_STROKE_COLOR, DEFAULT_STROKE_SETTINGS } from '@/types/character';
+import { DEFAULT_SYMMETRIC_TRANSFORM, DEFAULT_FILL_COLOR, DEFAULT_STROKE_COLOR, DEFAULT_STROKE_SETTINGS } from '@/types/character';
 import { PARTS } from '@/data/parts';
 import { CATEGORIES } from '@/data/categories';
 import { ACTION_MAP } from '@/data/poses-expressions';
@@ -17,6 +17,13 @@ function clampSymmetricTransform(t: SymmetricTransform): SymmetricTransform {
   };
 }
 
+const MAX_RECENT_COLORS = 5;
+
+function addToRecent(list: string[], color: string): string[] {
+  const filtered = list.filter((c) => c.toLowerCase() !== color.toLowerCase());
+  return [color, ...filtered].slice(0, MAX_RECENT_COLORS);
+}
+
 interface CharacterState {
   step: MakerStep;
   selectedParts: SelectedParts;
@@ -28,6 +35,8 @@ interface CharacterState {
   activeExpressionId: ExpressionId;
   activeActionId: string | null;
   strokeSettings: StrokeSettings;
+  recentFillColors: string[];
+  recentStrokeColors: string[];
 
   setStep: (step: MakerStep) => void;
   selectPart: (categoryId: CategoryId, partId: string) => void;
@@ -63,6 +72,8 @@ export const useCharacterStore = create<CharacterState>()(
       activeExpressionId: 'neutral',
       activeActionId: null,
       strokeSettings: DEFAULT_STROKE_SETTINGS,
+      recentFillColors: [],
+      recentStrokeColors: [],
 
       setStep: (step) => set({ step }),
 
@@ -102,12 +113,19 @@ export const useCharacterStore = create<CharacterState>()(
       },
 
       setPartColor: (categoryId, color) =>
-        set((state) => ({
-          partColors: {
-            ...state.partColors,
-            [categoryId]: color,
-          },
-        })),
+        set((state) => {
+          const recentFillColors = color.fill.toLowerCase() !== DEFAULT_FILL_COLOR.toLowerCase()
+            ? addToRecent(state.recentFillColors, color.fill)
+            : state.recentFillColors;
+          const recentStrokeColors = color.stroke.toLowerCase() !== DEFAULT_STROKE_COLOR.toLowerCase()
+            ? addToRecent(state.recentStrokeColors, color.stroke)
+            : state.recentStrokeColors;
+          return {
+            partColors: { ...state.partColors, [categoryId]: color },
+            recentFillColors,
+            recentStrokeColors,
+          };
+        }),
 
       applyColorToAll: (color) =>
         set((state) => {
@@ -117,7 +135,13 @@ export const useCharacterStore = create<CharacterState>()(
               next[id] = color;
             }
           }
-          return { partColors: next };
+          const recentFillColors = color.fill.toLowerCase() !== DEFAULT_FILL_COLOR.toLowerCase()
+            ? addToRecent(state.recentFillColors, color.fill)
+            : state.recentFillColors;
+          const recentStrokeColors = color.stroke.toLowerCase() !== DEFAULT_STROKE_COLOR.toLowerCase()
+            ? addToRecent(state.recentStrokeColors, color.stroke)
+            : state.recentStrokeColors;
+          return { partColors: next, recentFillColors, recentStrokeColors };
         }),
 
       resetPartColor: (categoryId) =>
@@ -211,7 +235,7 @@ export const useCharacterStore = create<CharacterState>()(
     }),
     {
       name: 'character-maker-state',
-      version: 10,
+      version: 11,
       storage: createJSONStorage(() => sessionStorage),
       migrate: (persistedState, version) => {
         const state = persistedState as Record<string, unknown>;
@@ -282,6 +306,9 @@ export const useCharacterStore = create<CharacterState>()(
           return { ...state, strokeSettings: DEFAULT_STROKE_SETTINGS };
         }
         // v9→v10: symmetric rendering for eyes/mouth/face2, no state changes
+        if (version < 11) {
+          return { ...state, recentFillColors: [], recentStrokeColors: [] };
+        }
         return state as unknown as CharacterState;
       },
       partialize: (state) => ({
@@ -295,6 +322,8 @@ export const useCharacterStore = create<CharacterState>()(
         activeExpressionId: state.activeExpressionId,
         activeActionId: state.activeActionId,
         strokeSettings: state.strokeSettings,
+        recentFillColors: state.recentFillColors,
+        recentStrokeColors: state.recentStrokeColors,
       }),
     }
   )

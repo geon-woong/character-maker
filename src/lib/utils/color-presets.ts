@@ -31,3 +31,23 @@ export const STROKE_PRESETS: readonly ColorPreset[] = [
   { id: 'dark-green', name: '짙은초록', color: '#1b5e20' },
   { id: 'purple', name: '보라', color: '#4a148c' },
 ];
+
+export const RAINBOW_FILL_PRESETS: readonly ColorPreset[] = [
+  { id: 'rainbow-red', name: '빨강', color: '#FF0000' },
+  { id: 'rainbow-orange', name: '주황', color: '#FF8C00' },
+  { id: 'rainbow-yellow', name: '노랑', color: '#FFD700' },
+  { id: 'rainbow-green', name: '초록', color: '#00C853' },
+  { id: 'rainbow-blue', name: '파랑', color: '#2979FF' },
+  { id: 'rainbow-indigo', name: '남색', color: '#304FFE' },
+  { id: 'rainbow-violet', name: '보라', color: '#AA00FF' },
+];
+
+export const RAINBOW_STROKE_PRESETS: readonly ColorPreset[] = [
+  { id: 'rainbow-red', name: '빨강', color: '#C62828' },
+  { id: 'rainbow-orange', name: '주황', color: '#E65100' },
+  { id: 'rainbow-yellow', name: '노랑', color: '#F9A825' },
+  { id: 'rainbow-green', name: '초록', color: '#2E7D32' },
+  { id: 'rainbow-blue', name: '파랑', color: '#1565C0' },
+  { id: 'rainbow-indigo', name: '남색', color: '#1A237E' },
+  { id: 'rainbow-violet', name: '보라', color: '#6A1B9A' },
+];

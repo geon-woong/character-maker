@@ -1,5 +1,9 @@
-import type { PartDefinition } from '@/types/character';
+import type { PartColor, PartDefinition } from '@/types/character';
 import { withBasePath } from '@/lib/utils/asset-path';
+import { LAYER_Z } from '@/lib/utils/constants';
+
+/** Placeholder fixed color for mouth expression overlays (adjust as needed) */
+const EXPRESSION_COLOR: PartColor = { fill: '#FF6B6B', stroke: '#231815' };
 
 /**
  * All part definitions organized by categoryId -> PartDefinition[]
@@ -27,7 +31,7 @@ export const PARTS: Record<string, PartDefinition[]> = {
         'lying/default': p('/assets/parts/body/posture/01_lay.svg'),
         'bowing/default': {
           svgPath: p('/assets/parts/body/posture/01_bow.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/body/extra/01_bow.svg'), layerIndex: 10 }],
+          extraLayers: [{ svgPath: p('/assets/parts/body/extra/01_bow.svg'), layerIndex: LAYER_Z.bodyExtra }],
         },
       },
       directionVariants: {
@@ -47,7 +51,7 @@ export const PARTS: Record<string, PartDefinition[]> = {
         'lying/default': p('/assets/parts/body/posture/02_lay.svg'),
         'bowing/default': {
           svgPath: p('/assets/parts/body/posture/02_bow.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/body/extra/02_bow.svg'), layerIndex: 10 }],
+          extraLayers: [{ svgPath: p('/assets/parts/body/extra/02_bow.svg'), layerIndex: LAYER_Z.bodyExtra }],
         },
       },
       directionVariants: {
@@ -81,7 +85,9 @@ export const PARTS: Record<string, PartDefinition[]> = {
       thumbnail: p('/assets/parts/eyes/01.svg'),
       variesByExpression: true,
       variesByPose: false,
-      variants: { 'any/neutral': p('/assets/parts/eyes/01.svg') },
+      variants: {
+        'any/neutral': p('/assets/parts/eyes/01.svg'),
+      },
       sideOffsets: {
         side: { right: { offsetX: -300 } },
         'half-side': { left: { offsetX: -40 }, right: { offsetX: -40 } },
@@ -93,7 +99,37 @@ export const PARTS: Record<string, PartDefinition[]> = {
       thumbnail: p('/assets/parts/eyes/02.svg'),
       variesByExpression: true,
       variesByPose: false,
-      variants: { 'any/neutral': p('/assets/parts/eyes/02.svg') },
+      variants: {
+        'any/neutral': p('/assets/parts/eyes/02.svg')
+      },
+      sideOffsets: {
+        side: { right: { offsetX: -300 } },
+        'half-side': { left: { offsetX: -40 }, right: { offsetX: -40 } },
+      },
+    },
+    {
+      id: '03',
+      name: '눈 03',
+      thumbnail: p('/assets/parts/eyes/03.svg'),
+      variesByExpression: true,
+      variesByPose: false,
+      variants: {
+        'any/neutral': p('/assets/parts/eyes/03.svg'),
+      },
+      sideOffsets: {
+        side: { right: { offsetX: -300 } },
+        'half-side': { left: { offsetX: -40 }, right: { offsetX: -40 } },
+      },
+    },
+    {
+      id: '04',
+      name: '눈 04',
+      thumbnail: p('/assets/parts/eyes/04.svg'),
+      variesByExpression: true,
+      variesByPose: false,
+      variants: {
+        'any/neutral': p('/assets/parts/eyes/04.svg'),
+      },
       sideOffsets: {
         side: { right: { offsetX: -300 } },
         'half-side': { left: { offsetX: -40 }, right: { offsetX: -40 } },
@@ -125,6 +161,18 @@ export const PARTS: Record<string, PartDefinition[]> = {
         'half-side': { offsetX: -40 },
       },
     },
+    {
+      id: '03',
+      name: '코 03',
+      thumbnail: p('/assets/parts/nose/03.svg'),
+      variesByExpression: false,
+      variesByPose: false,
+      variants: { 'any/default': p('/assets/parts/nose/03.svg') },
+      positionOverrides: {
+        side: { offsetX: -300 },
+        'half-side': { offsetX: -40 },
+      },
+    },
   ],
   mouth: [
     {
@@ -133,7 +181,25 @@ export const PARTS: Record<string, PartDefinition[]> = {
       thumbnail: p('/assets/parts/mouth/01.svg'),
       variesByExpression: true,
       variesByPose: false,
-      variants: { 'any/neutral': p('/assets/parts/mouth/01.svg') },
+      variants: {
+        'any/neutral': p('/assets/parts/mouth/01.svg'),
+        'any/happy': {
+          svgPath: p('/assets/parts/mouth/01.svg'),
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/smile.svg'), layerIndex: LAYER_Z.mouthExpression, fixedColor: EXPRESSION_COLOR }],
+        },
+        'any/sad': {
+          svgPath: p('/assets/parts/mouth/01.svg'),
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/sad.svg'), layerIndex: LAYER_Z.mouthExpression, fixedColor: EXPRESSION_COLOR }],
+        },
+        'any/angry': {
+          svgPath: p('/assets/parts/mouth/01.svg'),
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/angry.svg'), layerIndex: LAYER_Z.mouthExpression, fixedColor: EXPRESSION_COLOR }],
+        },
+        'any/surprised': {
+          svgPath: p('/assets/parts/mouth/01.svg'),
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/teasing.svg'), layerIndex: LAYER_Z.mouthExpression, fixedColor: EXPRESSION_COLOR }],
+        },
+      },
       sideOffsets: {
         side: { right: { offsetX: -300 } },
         'half-side': { left: { offsetX: -40 }, right: { offsetX: -40 } },
@@ -145,7 +211,86 @@ export const PARTS: Record<string, PartDefinition[]> = {
       thumbnail: p('/assets/parts/mouth/02.svg'),
       variesByExpression: true,
       variesByPose: false,
-      variants: { 'any/neutral': p('/assets/parts/mouth/02.svg') },
+      variants: {
+        'any/neutral': p('/assets/parts/mouth/02.svg'),
+        'any/happy': {
+          svgPath: p('/assets/parts/mouth/02.svg'),
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/smile.svg'), layerIndex: LAYER_Z.mouthExpression, fixedColor: EXPRESSION_COLOR }],
+        },
+        'any/sad': {
+          svgPath: p('/assets/parts/mouth/02.svg'),
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/sad.svg'), layerIndex: LAYER_Z.mouthExpression, fixedColor: EXPRESSION_COLOR }],
+        },
+        'any/angry': {
+          svgPath: p('/assets/parts/mouth/02.svg'),
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/angry.svg'), layerIndex: LAYER_Z.mouthExpression, fixedColor: EXPRESSION_COLOR }],
+        },
+        'any/surprised': {
+          svgPath: p('/assets/parts/mouth/02.svg'),
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/teasing.svg'), layerIndex: LAYER_Z.mouthExpression, fixedColor: EXPRESSION_COLOR }],
+        },
+      },
+      sideOffsets: {
+        side: { right: { offsetX: -300 } },
+        'half-side': { left: { offsetX: -40 }, right: { offsetX: -40 } },
+      },
+    },
+    {
+      id: '03',
+      name: '입 03',
+      thumbnail: p('/assets/parts/mouth/03.svg'),
+      variesByExpression: true,
+      variesByPose: false,
+      colorable: true,
+      variants: {
+        'any/neutral': p('/assets/parts/mouth/03.svg'),
+        'any/happy': {
+          svgPath: p('/assets/parts/mouth/03.svg'),
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/smile.svg'), layerIndex: LAYER_Z.mouthExpression, fixedColor: EXPRESSION_COLOR }],
+        },
+        'any/sad': {
+          svgPath: p('/assets/parts/mouth/03.svg'),
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/sad.svg'), layerIndex: LAYER_Z.mouthExpression, fixedColor: EXPRESSION_COLOR }],
+        },
+        'any/angry': {
+          svgPath: p('/assets/parts/mouth/03.svg'),
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/angry.svg'), layerIndex: LAYER_Z.mouthExpression, fixedColor: EXPRESSION_COLOR }],
+        },
+        'any/surprised': {
+          svgPath: p('/assets/parts/mouth/03.svg'),
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/teasing.svg'), layerIndex: LAYER_Z.mouthExpression, fixedColor: EXPRESSION_COLOR }],
+        },
+      },
+      sideOffsets: {
+        side: { right: { offsetX: -300 } },
+        'half-side': { left: { offsetX: -40 }, right: { offsetX: -40 } },
+      },
+    },
+    {
+      id: '04',
+      name: '입 04',
+      thumbnail: p('/assets/parts/mouth/04.svg'),
+      variesByExpression: true,
+      variesByPose: false,
+      variants: {
+        'any/neutral': p('/assets/parts/mouth/04.svg'),
+        'any/happy': {
+          svgPath: p('/assets/parts/mouth/04.svg'),
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/smile.svg'), layerIndex: LAYER_Z.mouthExpression, fixedColor: EXPRESSION_COLOR }],
+        },
+        'any/sad': {
+          svgPath: p('/assets/parts/mouth/04.svg'),
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/sad.svg'), layerIndex: LAYER_Z.mouthExpression, fixedColor: EXPRESSION_COLOR }],
+        },
+        'any/angry': {
+          svgPath: p('/assets/parts/mouth/04.svg'),
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/angry.svg'), layerIndex: LAYER_Z.mouthExpression, fixedColor: EXPRESSION_COLOR }],
+        },
+        'any/surprised': {
+          svgPath: p('/assets/parts/mouth/04.svg'),
+          extraLayers: [{ svgPath: p('/assets/parts/mouth/expression/teasing.svg'), layerIndex: LAYER_Z.mouthExpression, fixedColor: EXPRESSION_COLOR }],
+        },
+      },
       sideOffsets: {
         side: { right: { offsetX: -300 } },
         'half-side': { left: { offsetX: -40 }, right: { offsetX: -40 } },
@@ -214,7 +359,7 @@ export const PARTS: Record<string, PartDefinition[]> = {
       variants: {
         'any/default': {
           svgPath: p('/assets/parts/ears/03.svg'),
-          extraLayers: [{ svgPath: p('/assets/parts/ears/extra/03.svg'), layerIndex: 10 }],
+          extraLayers: [{ svgPath: p('/assets/parts/ears/extra/03.svg'), layerIndex: LAYER_Z.earsExtra }],
         },
       },
     },
@@ -227,40 +372,6 @@ export const PARTS: Record<string, PartDefinition[]> = {
       variants: {
         'any/default': p('/assets/parts/ears/04.svg'),
       },
-    },
-  ],
-  ear2: [
-    {
-      id: '01',
-      name: '귀2 01',
-      thumbnail: p('/assets/parts/ear2/01.svg'),
-      variesByExpression: false,
-      variesByPose: false,
-      variants: { 'any/default': p('/assets/parts/ear2/01.svg') },
-    },
-    {
-      id: '02',
-      name: '귀2 02',
-      thumbnail: p('/assets/parts/ear2/02.svg'),
-      variesByExpression: false,
-      variesByPose: false,
-      variants: { 'any/default': p('/assets/parts/ear2/02.svg') },
-    },
-    {
-      id: '03',
-      name: '귀2 03',
-      thumbnail: p('/assets/parts/ear2/03.svg'),
-      variesByExpression: false,
-      variesByPose: false,
-      variants: { 'any/default': p('/assets/parts/ear2/03.svg') },
-    },
-    {
-      id: '04',
-      name: '귀2 04',
-      thumbnail: p('/assets/parts/ear2/04.svg'),
-      variesByExpression: false,
-      variesByPose: false,
-      variants: { 'any/default': p('/assets/parts/ear2/04.svg') },
     },
   ],
 };

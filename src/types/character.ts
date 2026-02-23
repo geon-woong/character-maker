@@ -54,6 +54,8 @@ export interface Action {
 export interface ExtraLayer {
   readonly svgPath: string;
   readonly layerIndex: number;
+  /** Fixed fill/stroke color that overrides category color resolution */
+  readonly fixedColor?: PartColor;
 }
 
 /** Variant value with extra layers for composite rendering */
@@ -92,6 +94,8 @@ export interface PartDefinition {
   readonly positionOverrides?: Record<string, PartPosition>;
   /** Per-side offsets for symmetric categories, keyed by ViewDirection */
   readonly sideOffsets?: Partial<Record<ViewDirection, SideOffset>>;
+  /** When true, user can independently select fill/stroke colors for this part */
+  readonly colorable?: boolean;
 }
 
 // ===== Selection State =====
@@ -149,4 +153,6 @@ export interface ResolvedLayer {
   readonly side?: PartSide;
   readonly flipX?: boolean;
   readonly isExtra?: boolean;
+  /** Fixed color propagated from ExtraLayer, overrides category color */
+  readonly fixedColor?: PartColor;
 }

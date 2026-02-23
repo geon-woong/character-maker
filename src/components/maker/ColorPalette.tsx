@@ -4,6 +4,7 @@ import { useCallback, useMemo } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { useCharacterStore } from '@/stores/character-store';
 import { CATEGORIES } from '@/data/categories';
+import { PARTS } from '@/data/parts';
 import { FILL_PRESETS, STROKE_PRESETS } from '@/lib/utils/color-presets';
 import { DEFAULT_FILL_COLOR, DEFAULT_STROKE_COLOR } from '@/types/character';
 import { COLORABLE_CATEGORIES } from '@/lib/utils/constants';
@@ -11,13 +12,23 @@ import { cn } from '@/lib/utils/cn';
 
 export function ColorPalette() {
   const activeCategoryId = useCharacterStore((s) => s.activeCategoryId);
+  const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partColors = useCharacterStore((s) => s.partColors);
   const setPartColor = useCharacterStore((s) => s.setPartColor);
   const applyColorToAll = useCharacterStore((s) => s.applyColorToAll);
   const resetPartColor = useCharacterStore((s) => s.resetPartColor);
 
   const category = CATEGORIES.find((c) => c.id === activeCategoryId);
-  const isColorable = COLORABLE_CATEGORIES.includes(activeCategoryId);
+  const isColorable = useMemo(() => {
+    if (COLORABLE_CATEGORIES.includes(activeCategoryId)) return true;
+    // Check per-part colorable flag (e.g. specific mouth parts)
+    const partId = selectedParts[activeCategoryId];
+    if (!partId) return false;
+    const parts = PARTS[activeCategoryId];
+    if (!parts) return false;
+    const part = parts.find((p) => p.id === partId);
+    return part?.colorable === true;
+  }, [activeCategoryId, selectedParts]);
 
   const currentFill = useMemo(
     () => partColors[activeCategoryId]?.fill ?? DEFAULT_FILL_COLOR,

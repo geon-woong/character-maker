@@ -5,8 +5,8 @@ import type { StrokeTextureId } from '@/types/character';
  * Uses feTurbulence + feDisplacementMap to subtly distort paths.
  */
 const ROUGH_FILTER_DEF = `<filter id="rough-stroke" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
-  <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="3" seed="42" result="noise"/>
-  <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+  <feTurbulence type="turbulence" baseFrequency="0.08" numOctaves="3" seed="42" result="noise"/>
+  <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
 </filter>`;
 
 /**

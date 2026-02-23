@@ -185,6 +185,7 @@ export function resolveLayers(
             rotate: userR,
             side: 'left',
             isExtra: true,
+            fixedColor: extra.fixedColor,
           });
           layers.push({
             categoryId: category.id,
@@ -196,6 +197,7 @@ export function resolveLayers(
             side: 'right',
             flipX: true,
             isExtra: true,
+            fixedColor: extra.fixedColor,
           });
         } else {
           layers.push({
@@ -206,6 +208,7 @@ export function resolveLayers(
             offsetY: 0,
             rotate: 0,
             isExtra: true,
+            fixedColor: extra.fixedColor,
           });
         }
       }

@@ -68,14 +68,14 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
       return;
     }
 
-    applyColorsToLayers(baseLayers, partColors, strokeSettings).then((result) => {
+    applyColorsToLayers(baseLayers, partColors, strokeSettings, selectedParts).then((result) => {
       if (!cancelled) setColoredLayers(result);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [baseLayers, partColors, strokeSettings]);
+  }, [baseLayers, partColors, strokeSettings, selectedParts]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {

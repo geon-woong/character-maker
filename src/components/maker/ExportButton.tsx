@@ -67,7 +67,7 @@ export function ExportButton() {
         partTransforms,
         activeDirection
       );
-      const layers = await applyColorsToLayers(baseLayers, partColors, strokeSettings);
+      const layers = await applyColorsToLayers(baseLayers, partColors, strokeSettings, selectedParts);
 
       const blob = await renderToBlobWithDirection(
         layers,

@@ -78,14 +78,14 @@ export function DirectionPreview({ direction, isSelected, onClick, className }: 
       return;
     }
 
-    applyColorsToLayers(baseLayers, partColors, strokeSettings).then((result) => {
+    applyColorsToLayers(baseLayers, partColors, strokeSettings, selectedParts).then((result) => {
       if (!cancelled) setColoredLayers(result);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [baseLayers, partColors, strokeSettings]);
+  }, [baseLayers, partColors, strokeSettings, selectedParts]);
 
   const cssTransform = DIRECTION_CSS_TRANSFORMS[direction];
 

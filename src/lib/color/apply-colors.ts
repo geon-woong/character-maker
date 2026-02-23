@@ -1,9 +1,10 @@
-import type { ResolvedLayer, PartColors, PartColor, StrokeSettings } from '@/types/character';
+import type { ResolvedLayer, PartColors, PartColor, StrokeSettings, SelectedParts, CategoryId } from '@/types/character';
 import { DEFAULT_FILL_COLOR, DEFAULT_STROKE_COLOR, DEFAULT_STROKE_SETTINGS } from '@/types/character';
 import { loadSvgText } from './svg-loader';
 import { replaceFillColor, replaceStrokeColor, replaceStrokeWidth, svgToDataUri } from './svg-colorizer';
 import { applyStrokeTexture } from './svg-texture';
 import { COLORABLE_CATEGORIES, DEFAULT_EYES_COLOR, MOUTH_FOLLOWS, STROKE_WIDTH_PRESETS } from '@/lib/utils/constants';
+import { PARTS } from '@/data/parts';
 
 const DEFAULT_PART_COLOR: PartColor = { fill: DEFAULT_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR };
 
@@ -17,9 +18,21 @@ const DEFAULT_PART_COLOR: PartColor = { fill: DEFAULT_FILL_COLOR, stroke: DEFAUL
 /** Categories whose SVGs use `fill: none` for stroke-only paths */
 const PRESERVE_NONE_CATEGORIES: readonly string[] = ['body', 'body2'];
 
+/** Check if the currently selected part for a category has `colorable: true`. */
+function isPartColorable(categoryId: string, selectedParts?: SelectedParts): boolean {
+  if (!selectedParts) return false;
+  const partId = selectedParts[categoryId as CategoryId];
+  if (!partId) return false;
+  const categoryParts = PARTS[categoryId as CategoryId];
+  if (!categoryParts) return false;
+  const part = categoryParts.find((p) => p.id === partId);
+  return part?.colorable === true;
+}
+
 function resolveColor(
   categoryId: string,
-  partColors: PartColors
+  partColors: PartColors,
+  isColorable?: boolean
 ): { fill: string; stroke: string; skipStroke: boolean; preserveNone: boolean } {
   const preserveNone = PRESERVE_NONE_CATEGORIES.includes(categoryId);
 
@@ -28,6 +41,10 @@ function resolveColor(
   }
 
   if (categoryId === 'mouth') {
+    if (isColorable) {
+      const color = partColors['mouth'] ?? DEFAULT_PART_COLOR;
+      return { fill: color.fill, stroke: color.stroke, skipStroke: false, preserveNone };
+    }
     const bodyColor = partColors[MOUTH_FOLLOWS] ?? DEFAULT_PART_COLOR;
     return { fill: bodyColor.fill, stroke: DEFAULT_STROKE_COLOR, skipStroke: false, preserveNone };
   }
@@ -48,11 +65,33 @@ function resolveColor(
 export async function applyColorsToLayers(
   layers: ResolvedLayer[],
   partColors: PartColors,
-  strokeSettings: StrokeSettings = DEFAULT_STROKE_SETTINGS
+  strokeSettings: StrokeSettings = DEFAULT_STROKE_SETTINGS,
+  selectedParts?: SelectedParts
 ): Promise<ResolvedLayer[]> {
   return Promise.all(
     layers.map(async (layer) => {
-      const { fill, stroke, skipStroke, preserveNone } = resolveColor(layer.categoryId, partColors);
+      // Fixed color from ExtraLayer takes priority
+      if (layer.fixedColor) {
+        try {
+          let svgText = await loadSvgText(layer.svgPath);
+          const preserveNone = PRESERVE_NONE_CATEGORIES.includes(layer.categoryId);
+          svgText = replaceFillColor(svgText, layer.fixedColor.fill, preserveNone);
+          svgText = replaceStrokeColor(svgText, layer.fixedColor.stroke);
+          if (strokeSettings.widthId !== 'default') {
+            const widthPx = STROKE_WIDTH_PRESETS[strokeSettings.widthId].value;
+            svgText = replaceStrokeWidth(svgText, widthPx);
+          }
+          svgText = applyStrokeTexture(svgText, strokeSettings.textureId);
+          const dataUri = svgToDataUri(svgText);
+          return { ...layer, svgPath: dataUri };
+        } catch (error) {
+          console.error(`Failed to colorize fixed-color layer ${layer.categoryId}:`, error);
+          return layer;
+        }
+      }
+
+      const colorable = isPartColorable(layer.categoryId, selectedParts);
+      const { fill, stroke, skipStroke, preserveNone } = resolveColor(layer.categoryId, partColors, colorable);
 
       try {
         let svgText = await loadSvgText(layer.svgPath);

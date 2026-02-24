@@ -20,8 +20,8 @@ function clampSymmetricTransform(t: SymmetricTransform): SymmetricTransform {
 const MAX_RECENT_COLORS = 5;
 
 function addToRecent(list: string[], color: string): string[] {
-  const filtered = list.filter((c) => c.toLowerCase() !== color.toLowerCase());
-  return [color, ...filtered].slice(0, MAX_RECENT_COLORS);
+  if (list.some((c) => c.toLowerCase() === color.toLowerCase())) return list;
+  return [color, ...list].slice(0, MAX_RECENT_COLORS);
 }
 
 interface CharacterState {
@@ -45,6 +45,7 @@ interface CharacterState {
   resetPartTransform: (categoryId: CategoryId) => void;
   setPartColor: (categoryId: CategoryId, color: PartColor) => void;
   applyColorToAll: (color: PartColor) => void;
+  applyPalette: (colors: Partial<Record<CategoryId, PartColor>>) => void;
   resetPartColor: (categoryId: CategoryId) => void;
   resetAllColors: () => void;
   randomizeAll: () => void;
@@ -142,6 +143,15 @@ export const useCharacterStore = create<CharacterState>()(
             ? addToRecent(state.recentStrokeColors, color.stroke)
             : state.recentStrokeColors;
           return { partColors: next, recentFillColors, recentStrokeColors };
+        }),
+
+      applyPalette: (colors) =>
+        set((state) => {
+          const next: PartColors = { ...state.partColors };
+          for (const [id, color] of Object.entries(colors)) {
+            next[id as CategoryId] = color;
+          }
+          return { partColors: next };
         }),
 
       resetPartColor: (categoryId) =>

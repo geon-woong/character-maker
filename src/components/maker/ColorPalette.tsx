@@ -1,11 +1,11 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { useCharacterStore } from '@/stores/character-store';
 import { CATEGORIES } from '@/data/categories';
 import { PARTS } from '@/data/parts';
-import { FILL_PRESETS, STROKE_PRESETS, RAINBOW_FILL_PRESETS, RAINBOW_STROKE_PRESETS } from '@/lib/utils/color-presets';
+import { FILL_PRESETS, STROKE_PRESETS, PALETTE_PRESETS } from '@/lib/utils/color-presets';
 import { DEFAULT_FILL_COLOR, DEFAULT_STROKE_COLOR } from '@/types/character';
 import { COLORABLE_CATEGORIES } from '@/lib/utils/constants';
 import { cn } from '@/lib/utils/cn';
@@ -16,14 +16,16 @@ export function ColorPalette() {
   const partColors = useCharacterStore((s) => s.partColors);
   const setPartColor = useCharacterStore((s) => s.setPartColor);
   const applyColorToAll = useCharacterStore((s) => s.applyColorToAll);
+  const applyPalette = useCharacterStore((s) => s.applyPalette);
   const resetPartColor = useCharacterStore((s) => s.resetPartColor);
   const recentFillColors = useCharacterStore((s) => s.recentFillColors);
   const recentStrokeColors = useCharacterStore((s) => s.recentStrokeColors);
 
+  const [applyToAll, setApplyToAll] = useState(false);
+
   const category = CATEGORIES.find((c) => c.id === activeCategoryId);
   const isColorable = useMemo(() => {
     if (COLORABLE_CATEGORIES.includes(activeCategoryId)) return true;
-    // Check per-part colorable flag (e.g. specific mouth parts)
     const partId = selectedParts[activeCategoryId];
     if (!partId) return false;
     const parts = PARTS[activeCategoryId];
@@ -44,35 +46,51 @@ export function ColorPalette() {
 
   const handleFillPreset = useCallback(
     (fill: string) => {
-      setPartColor(activeCategoryId, { fill, stroke: currentStroke });
+      const color = { fill, stroke: currentStroke };
+      if (applyToAll) {
+        applyColorToAll(color);
+      } else {
+        setPartColor(activeCategoryId, color);
+      }
     },
-    [activeCategoryId, currentStroke, setPartColor]
+    [activeCategoryId, currentStroke, setPartColor, applyColorToAll, applyToAll]
   );
 
   const handleStrokePreset = useCallback(
     (stroke: string) => {
-      setPartColor(activeCategoryId, { fill: currentFill, stroke });
+      const color = { fill: currentFill, stroke };
+      if (applyToAll) {
+        applyColorToAll(color);
+      } else {
+        setPartColor(activeCategoryId, color);
+      }
     },
-    [activeCategoryId, currentFill, setPartColor]
+    [activeCategoryId, currentFill, setPartColor, applyColorToAll, applyToAll]
   );
 
   const handleCustomFill = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setPartColor(activeCategoryId, { fill: e.target.value, stroke: currentStroke });
+      const color = { fill: e.target.value, stroke: currentStroke };
+      if (applyToAll) {
+        applyColorToAll(color);
+      } else {
+        setPartColor(activeCategoryId, color);
+      }
     },
-    [activeCategoryId, currentStroke, setPartColor]
+    [activeCategoryId, currentStroke, setPartColor, applyColorToAll, applyToAll]
   );
 
   const handleCustomStroke = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setPartColor(activeCategoryId, { fill: currentFill, stroke: e.target.value });
+      const color = { fill: currentFill, stroke: e.target.value };
+      if (applyToAll) {
+        applyColorToAll(color);
+      } else {
+        setPartColor(activeCategoryId, color);
+      }
     },
-    [activeCategoryId, currentFill, setPartColor]
+    [activeCategoryId, currentFill, setPartColor, applyColorToAll, applyToAll]
   );
-
-  const handleApplyToAll = useCallback(() => {
-    applyColorToAll({ fill: currentFill, stroke: currentStroke });
-  }, [currentFill, currentStroke, applyColorToAll]);
 
   const handleReset = useCallback(() => {
     resetPartColor(activeCategoryId);
@@ -87,13 +105,52 @@ export function ColorPalette() {
         {category?.name} 색상
       </span>
 
+      {/* 추천 팔레트 */}
+      <div className="flex flex-col gap-2 rounded-lg bg-gray-50 p-3">
+        <span className="text-xs font-medium text-gray-600">추천 팔레트</span>
+        <div className="flex flex-wrap gap-2">
+          {PALETTE_PRESETS.map((preset) => {
+            const bodyColor = preset.colors.body;
+            const faceColor = preset.colors.face;
+            return (
+              <button
+                key={preset.id}
+                onClick={() => applyPalette(preset.colors)}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-gray-600 transition-colors hover:border-indigo-300 hover:bg-indigo-50"
+                title={preset.name}
+              >
+                <div className="flex -space-x-1">
+                  <div
+                    className="h-4 w-4 rounded-full border border-gray-300"
+                    style={{ backgroundColor: bodyColor?.fill }}
+                  />
+                  <div
+                    className="h-4 w-4 rounded-full border border-gray-300"
+                    style={{ backgroundColor: faceColor?.fill }}
+                  />
+                </div>
+                {preset.name}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 전체 적용 체크박스 */}
+      <label className="flex cursor-pointer items-center gap-2">
+        <input
+          type="checkbox"
+          checked={applyToAll}
+          onChange={(e) => setApplyToAll(e.target.checked)}
+          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+        />
+        <span className="text-xs text-gray-600">전체 부위에 적용</span>
+      </label>
+
       {/* 채우기 영역 */}
       <div className="flex flex-col gap-2 rounded-lg bg-gray-50 p-3">
         <div className="flex items-center gap-2">
-          <div
-            className="h-5 w-5 rounded-full border border-gray-300"
-            style={{ backgroundColor: currentFill }}
-          />
+          <div className="h-5 w-5 rounded-full border border-gray-300" style={{ backgroundColor: currentFill }} />
           <span className="text-xs font-medium text-gray-600">채우기</span>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -105,7 +162,7 @@ export function ColorPalette() {
                 'h-8 w-8 rounded-full border-2 transition-all',
                 currentFill.toLowerCase() === preset.color.toLowerCase()
                   ? 'border-indigo-500 ring-2 ring-indigo-200'
-                  : 'border-gray-200 hover:border-gray-400'
+                  : 'border-gray-200 hover:border-gray-400',
               )}
               style={{ backgroundColor: preset.color }}
               title={preset.name}
@@ -136,7 +193,7 @@ export function ColorPalette() {
                     'h-8 w-8 rounded-full border-2 transition-all',
                     currentFill.toLowerCase() === color.toLowerCase()
                       ? 'border-indigo-500 ring-2 ring-indigo-200'
-                      : 'border-gray-200 hover:border-gray-400'
+                      : 'border-gray-200 hover:border-gray-400',
                   )}
                   style={{ backgroundColor: color }}
                   title={color}
@@ -145,34 +202,12 @@ export function ColorPalette() {
             </div>
           </div>
         )}
-        <div>
-          <span className="mb-1 block text-xs text-gray-400">추천</span>
-          <div className="flex flex-wrap gap-2">
-            {RAINBOW_FILL_PRESETS.map((preset) => (
-              <button
-                key={preset.id}
-                onClick={() => handleFillPreset(preset.color)}
-                className={cn(
-                  'h-8 w-8 rounded-full border-2 transition-all',
-                  currentFill.toLowerCase() === preset.color.toLowerCase()
-                    ? 'border-indigo-500 ring-2 ring-indigo-200'
-                    : 'border-gray-200 hover:border-gray-400'
-                )}
-                style={{ backgroundColor: preset.color }}
-                title={preset.name}
-              />
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* 선 영역 */}
       <div className="flex flex-col gap-2 rounded-lg bg-gray-50 p-3">
         <div className="flex items-center gap-2">
-          <div
-            className="h-5 w-5 rounded-full border-2 border-gray-300"
-            style={{ borderColor: currentStroke }}
-          />
+          <div className="h-5 w-5 rounded-full border-2 border-gray-300" style={{ borderColor: currentStroke }} />
           <span className="text-xs font-medium text-gray-600">선</span>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -184,7 +219,7 @@ export function ColorPalette() {
                 'h-8 w-8 rounded-full border-2 transition-all',
                 currentStroke.toLowerCase() === preset.color.toLowerCase()
                   ? 'border-indigo-500 ring-2 ring-indigo-200'
-                  : 'border-gray-200 hover:border-gray-400'
+                  : 'border-gray-200 hover:border-gray-400',
               )}
               style={{ backgroundColor: preset.color }}
               title={preset.name}
@@ -215,7 +250,7 @@ export function ColorPalette() {
                     'h-8 w-8 rounded-full border-2 transition-all',
                     currentStroke.toLowerCase() === color.toLowerCase()
                       ? 'border-indigo-500 ring-2 ring-indigo-200'
-                      : 'border-gray-200 hover:border-gray-400'
+                      : 'border-gray-200 hover:border-gray-400',
                   )}
                   style={{ backgroundColor: color }}
                   title={color}
@@ -224,43 +259,16 @@ export function ColorPalette() {
             </div>
           </div>
         )}
-        <div>
-          <span className="mb-1 block text-xs text-gray-400">추천</span>
-          <div className="flex flex-wrap gap-2">
-            {RAINBOW_STROKE_PRESETS.map((preset) => (
-              <button
-                key={preset.id}
-                onClick={() => handleStrokePreset(preset.color)}
-                className={cn(
-                  'h-8 w-8 rounded-full border-2 transition-all',
-                  currentStroke.toLowerCase() === preset.color.toLowerCase()
-                    ? 'border-indigo-500 ring-2 ring-indigo-200'
-                    : 'border-gray-200 hover:border-gray-400'
-                )}
-                style={{ backgroundColor: preset.color }}
-                title={preset.name}
-              />
-            ))}
-          </div>
-        </div>
       </div>
 
-      {/* 액션 버튼 */}
-      <div className="flex gap-2">
-        <button
-          onClick={handleApplyToAll}
-          className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
-        >
-          전체 적용
-        </button>
-        <button
-          onClick={handleReset}
-          className="flex items-center justify-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
-        >
-          <RotateCcw className="h-3 w-3" />
-          초기화
-        </button>
-      </div>
+      {/* 초기화 버튼 */}
+      <button
+        onClick={handleReset}
+        className="flex items-center justify-center gap-1 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+      >
+        <RotateCcw className="h-3 w-3" />
+        초기화
+      </button>
     </div>
   );
 }

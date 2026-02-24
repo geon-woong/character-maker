@@ -32,22 +32,87 @@ export const STROKE_PRESETS: readonly ColorPreset[] = [
   { id: 'purple', name: '보라', color: '#4a148c' },
 ];
 
-export const RAINBOW_FILL_PRESETS: readonly ColorPreset[] = [
-  { id: 'rainbow-red', name: '빨강', color: '#FF0000' },
-  { id: 'rainbow-orange', name: '주황', color: '#FF8C00' },
-  { id: 'rainbow-yellow', name: '노랑', color: '#FFD700' },
-  { id: 'rainbow-green', name: '초록', color: '#00C853' },
-  { id: 'rainbow-blue', name: '파랑', color: '#2979FF' },
-  { id: 'rainbow-indigo', name: '남색', color: '#304FFE' },
-  { id: 'rainbow-violet', name: '보라', color: '#AA00FF' },
-];
+import type { CategoryId, PartColor } from '@/types/character';
 
-export const RAINBOW_STROKE_PRESETS: readonly ColorPreset[] = [
-  { id: 'rainbow-red', name: '빨강', color: '#C62828' },
-  { id: 'rainbow-orange', name: '주황', color: '#E65100' },
-  { id: 'rainbow-yellow', name: '노랑', color: '#F9A825' },
-  { id: 'rainbow-green', name: '초록', color: '#2E7D32' },
-  { id: 'rainbow-blue', name: '파랑', color: '#1565C0' },
-  { id: 'rainbow-indigo', name: '남색', color: '#1A237E' },
-  { id: 'rainbow-violet', name: '보라', color: '#6A1B9A' },
+export interface PalettePreset {
+  readonly id: string;
+  readonly name: string;
+  readonly colors: Partial<Record<CategoryId, PartColor>>;
+}
+
+const s = '#231815'; // 기본 선 색상
+
+export const PALETTE_PRESETS: readonly PalettePreset[] = [
+  {
+    id: 'default',
+    name: '기본',
+    colors: {
+      body: { fill: '#ffffff', stroke: s },
+      body2: { fill: '#ffffff', stroke: s },
+      face: { fill: '#ffffff', stroke: s },
+      face2: { fill: '#ffffff', stroke: s },
+      ears: { fill: '#ffffff', stroke: s },
+      nose: { fill: '#ffffff', stroke: s },
+    },
+  },
+  {
+    id: 'warm',
+    name: '따뜻한',
+    colors: {
+      body: { fill: '#ffdab9', stroke: '#8b5e3c' },
+      body2: { fill: '#ffdab9', stroke: '#8b5e3c' },
+      face: { fill: '#ffe4c9', stroke: '#8b5e3c' },
+      face2: { fill: '#ffe4c9', stroke: '#8b5e3c' },
+      ears: { fill: '#ffdab9', stroke: '#8b5e3c' },
+      nose: { fill: '#ffe4c9', stroke: '#8b5e3c' },
+    },
+  },
+  {
+    id: 'cool',
+    name: '차가운',
+    colors: {
+      body: { fill: '#d6eaf8', stroke: '#2c3e50' },
+      body2: { fill: '#d6eaf8', stroke: '#2c3e50' },
+      face: { fill: '#e8f0fe', stroke: '#2c3e50' },
+      face2: { fill: '#e8f0fe', stroke: '#2c3e50' },
+      ears: { fill: '#d6eaf8', stroke: '#2c3e50' },
+      nose: { fill: '#e8f0fe', stroke: '#2c3e50' },
+    },
+  },
+  {
+    id: 'dark',
+    name: '다크',
+    colors: {
+      body: { fill: '#4a4a4a', stroke: '#1a1a1a' },
+      body2: { fill: '#4a4a4a', stroke: '#1a1a1a' },
+      face: { fill: '#5a5a5a', stroke: '#1a1a1a' },
+      face2: { fill: '#5a5a5a', stroke: '#1a1a1a' },
+      ears: { fill: '#4a4a4a', stroke: '#1a1a1a' },
+      nose: { fill: '#5a5a5a', stroke: '#1a1a1a' },
+    },
+  },
+  {
+    id: 'pastel',
+    name: '파스텔',
+    colors: {
+      body: { fill: '#fce4ec', stroke: '#ad1457' },
+      body2: { fill: '#fce4ec', stroke: '#ad1457' },
+      face: { fill: '#fff3e0', stroke: '#ad1457' },
+      face2: { fill: '#fff3e0', stroke: '#ad1457' },
+      ears: { fill: '#e8f5e9', stroke: '#ad1457' },
+      nose: { fill: '#fff3e0', stroke: '#ad1457' },
+    },
+  },
+  {
+    id: 'fantasy',
+    name: '판타지',
+    colors: {
+      body: { fill: '#e1bee7', stroke: '#4a148c' },
+      body2: { fill: '#e1bee7', stroke: '#4a148c' },
+      face: { fill: '#f3e5f5', stroke: '#4a148c' },
+      face2: { fill: '#f3e5f5', stroke: '#4a148c' },
+      ears: { fill: '#ce93d8', stroke: '#4a148c' },
+      nose: { fill: '#f3e5f5', stroke: '#4a148c' },
+    },
+  },
 ];

@@ -43,8 +43,6 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
   const partTransforms = useCharacterStore((s) => s.partTransforms);
   const partColors = useCharacterStore((s) => s.partColors);
   const strokeSettings = useCharacterStore((s) => s.strokeSettings);
-  const activePoseId = useCharacterStore((s) => s.activePoseId);
-  const activeExpressionId = useCharacterStore((s) => s.activeExpressionId);
   const setSymmetricTransform = useCharacterStore((s) => s.setSymmetricTransform);
   const resetPartTransform = useCharacterStore((s) => s.resetPartTransform);
 
@@ -56,8 +54,8 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
   const hasSelection = selectedParts[editCategoryId] != null;
 
   const baseLayers = useMemo(
-    () => resolveLayersForDirection(selectedParts, activePoseId, activeExpressionId, partTransforms, 'front'),
-    [selectedParts, activePoseId, activeExpressionId, partTransforms]
+    () => resolveLayersForDirection(selectedParts, 'standing', 'neutral', partTransforms, 'front'),
+    [selectedParts, partTransforms]
   );
 
   useEffect(() => {

@@ -119,6 +119,14 @@ export type PartTransforms = Partial<Record<CategoryId, SymmetricTransform>>;
 
 export const DEFAULT_SYMMETRIC_TRANSFORM: SymmetricTransform = { x: 0, y: 0, rotate: 0 };
 
+// ===== Face Offset (group offset for eyes/nose/mouth/face2) =====
+export interface FaceOffset {
+  readonly x: number;
+  readonly y: number;
+}
+
+export const DEFAULT_FACE_OFFSET: FaceOffset = { x: 0, y: 0 };
+
 // ===== Part Color =====
 export interface PartColor {
   fill: string;

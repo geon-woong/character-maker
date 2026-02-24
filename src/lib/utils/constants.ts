@@ -42,6 +42,9 @@ export const DEFAULT_EYES_COLOR = '#040000';
 /** Mouth follows this category's color */
 export const MOUTH_FOLLOWS: CategoryId = 'face';
 
+/** faceOffset 일괄 이동 대상 카테고리 (눈/코/입/볼) */
+export const FACE_MOVABLE_CATEGORIES: readonly CategoryId[] = ['eyes', 'nose', 'mouth', 'face2'];
+
 /** 일괄 색상 변경에서 제외되는 카테고리 */
 export const BULK_COLOR_EXCLUDED: readonly CategoryId[] = ['eyes', 'nose', 'mouth'];
 

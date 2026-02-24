@@ -2,8 +2,9 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTransform, PartColors, PartColor, ViewDirection, PoseId, ExpressionId, StrokeSettings, StrokeWidthId, StrokeTextureId } from '@/types/character';
-import { DEFAULT_SYMMETRIC_TRANSFORM, DEFAULT_FILL_COLOR, DEFAULT_STROKE_COLOR, DEFAULT_STROKE_SETTINGS } from '@/types/character';
+import type { CategoryId, MakerStep, SelectedParts, PartTransforms, SymmetricTransform, PartColors, PartColor, ViewDirection, PoseId, ExpressionId, StrokeSettings, StrokeWidthId, StrokeTextureId, FaceOffset } from '@/types/character';
+import type { SnapshotState } from '@/stores/snapshot-store';
+import { DEFAULT_SYMMETRIC_TRANSFORM, DEFAULT_FILL_COLOR, DEFAULT_STROKE_COLOR, DEFAULT_STROKE_SETTINGS, DEFAULT_FACE_OFFSET } from '@/types/character';
 import { PARTS } from '@/data/parts';
 import { CATEGORIES } from '@/data/categories';
 import { ACTION_MAP } from '@/data/poses-expressions';
@@ -35,6 +36,7 @@ interface CharacterState {
   activeExpressionId: ExpressionId;
   activeActionId: string | null;
   strokeSettings: StrokeSettings;
+  faceOffset: FaceOffset;
   recentFillColors: string[];
   recentStrokeColors: string[];
 
@@ -55,6 +57,9 @@ interface CharacterState {
   setPose: (poseId: PoseId) => void;
   setExpression: (expressionId: ExpressionId) => void;
   setAction: (actionId: string) => void;
+  setFaceOffset: (offset: FaceOffset) => void;
+  resetFaceOffset: () => void;
+  loadSnapshot: (snapshot: SnapshotState) => void;
   setStrokeWidth: (widthId: StrokeWidthId) => void;
   setStrokeTexture: (textureId: StrokeTextureId) => void;
   resetStrokeSettings: () => void;
@@ -72,6 +77,7 @@ export const useCharacterStore = create<CharacterState>()(
       activePoseId: 'standing',
       activeExpressionId: 'neutral',
       activeActionId: null,
+      faceOffset: DEFAULT_FACE_OFFSET,
       strokeSettings: DEFAULT_STROKE_SETTINGS,
       recentFillColors: [],
       recentStrokeColors: [],
@@ -112,6 +118,17 @@ export const useCharacterStore = create<CharacterState>()(
           return { partTransforms: next };
         });
       },
+
+      setFaceOffset: (offset) => {
+        set({
+          faceOffset: {
+            x: Math.max(-OFFSET_LIMIT, Math.min(OFFSET_LIMIT, offset.x)),
+            y: Math.max(-OFFSET_LIMIT, Math.min(OFFSET_LIMIT, offset.y)),
+          },
+        });
+      },
+
+      resetFaceOffset: () => set({ faceOffset: DEFAULT_FACE_OFFSET }),
 
       setPartColor: (categoryId, color) =>
         set((state) => {
@@ -187,7 +204,7 @@ export const useCharacterStore = create<CharacterState>()(
             }
           }
         }
-        set({ selectedParts: randomized, partTransforms: {}, partColors: {}, strokeSettings: DEFAULT_STROKE_SETTINGS });
+        set({ selectedParts: randomized, partTransforms: {}, partColors: {}, faceOffset: DEFAULT_FACE_OFFSET, strokeSettings: DEFAULT_STROKE_SETTINGS });
       },
 
       resetCharacter: () =>
@@ -197,6 +214,7 @@ export const useCharacterStore = create<CharacterState>()(
           activeCategoryId: 'body',
           partTransforms: {},
           partColors: {},
+          faceOffset: DEFAULT_FACE_OFFSET,
           activeDirection: 'front',
           activePoseId: 'standing',
           activeExpressionId: 'neutral',
@@ -233,6 +251,18 @@ export const useCharacterStore = create<CharacterState>()(
       resetStrokeSettings: () =>
         set({ strokeSettings: DEFAULT_STROKE_SETTINGS }),
 
+      loadSnapshot: (snapshot) =>
+        set({
+          selectedParts: snapshot.selectedParts,
+          partTransforms: snapshot.partTransforms,
+          partColors: snapshot.partColors,
+          faceOffset: snapshot.faceOffset,
+          activePoseId: snapshot.activePoseId,
+          activeExpressionId: snapshot.activeExpressionId,
+          strokeSettings: snapshot.strokeSettings,
+          activeActionId: null,
+        }),
+
       isComplete: () => {
         const { selectedParts } = get();
         return CATEGORIES
@@ -245,7 +275,7 @@ export const useCharacterStore = create<CharacterState>()(
     }),
     {
       name: 'character-maker-state',
-      version: 11,
+      version: 12,
       storage: createJSONStorage(() => sessionStorage),
       migrate: (persistedState, version) => {
         const state = persistedState as Record<string, unknown>;
@@ -319,6 +349,9 @@ export const useCharacterStore = create<CharacterState>()(
         if (version < 11) {
           return { ...state, recentFillColors: [], recentStrokeColors: [] };
         }
+        if (version < 12) {
+          return { ...state, faceOffset: { x: 0, y: 0 } };
+        }
         return state as unknown as CharacterState;
       },
       partialize: (state) => ({
@@ -327,6 +360,7 @@ export const useCharacterStore = create<CharacterState>()(
         activeCategoryId: state.activeCategoryId,
         partTransforms: state.partTransforms,
         partColors: state.partColors,
+        faceOffset: state.faceOffset,
         activeDirection: state.activeDirection,
         activePoseId: state.activePoseId,
         activeExpressionId: state.activeExpressionId,

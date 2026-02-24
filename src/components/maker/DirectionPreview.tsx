@@ -44,6 +44,7 @@ export function DirectionPreview({ direction, isSelected, onClick, className }: 
 
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
+  const faceOffset = useCharacterStore((s) => s.faceOffset);
   const partColors = useCharacterStore((s) => s.partColors);
   const strokeSettings = useCharacterStore((s) => s.strokeSettings);
 
@@ -66,8 +67,8 @@ export function DirectionPreview({ direction, isSelected, onClick, className }: 
   }, [containerWidth]);
 
   const baseLayers = useMemo(
-    () => resolveLayersForDirection(selectedParts, DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID, partTransforms, direction),
-    [selectedParts, partTransforms, direction]
+    () => resolveLayersForDirection(selectedParts, DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID, partTransforms, direction, faceOffset),
+    [selectedParts, partTransforms, direction, faceOffset]
   );
 
   useEffect(() => {

@@ -11,10 +11,11 @@ import type {
   CategoryId,
   ExtraLayer,
   VariantData,
+  FaceOffset,
 } from '@/types/character';
 import { CATEGORIES } from '@/data/categories';
 import { PARTS } from '@/data/parts';
-import { EDITABLE_CATEGORIES, SYMMETRIC_CATEGORIES, TRANSFORM_PARENT, HIDDEN_CATEGORIES_BY_DIRECTION, HIDDEN_SIDES_BY_DIRECTION } from '@/lib/utils/constants';
+import { EDITABLE_CATEGORIES, SYMMETRIC_CATEGORIES, TRANSFORM_PARENT, HIDDEN_CATEGORIES_BY_DIRECTION, HIDDEN_SIDES_BY_DIRECTION, FACE_MOVABLE_CATEGORIES } from '@/lib/utils/constants';
 
 /**
  * Build the variant key for a part based on its variesByPose/variesByExpression flags.
@@ -106,7 +107,8 @@ export function resolveLayers(
   selectedParts: SelectedParts,
   poseId: PoseId,
   expressionId: ExpressionId,
-  partTransforms?: PartTransforms
+  partTransforms?: PartTransforms,
+  faceOffset?: FaceOffset
 ): ResolvedLayer[] {
   const layers: ResolvedLayer[] = [];
 
@@ -129,8 +131,13 @@ export function resolveLayers(
 
     const isSymmetric = SYMMETRIC_CATEGORIES.includes(category.id);
     const isEditable = EDITABLE_CATEGORIES.includes(category.id);
+    const isFaceMovable = FACE_MOVABLE_CATEGORIES.includes(category.id);
     const parentId = TRANSFORM_PARENT[category.id];
     const transform = partTransforms?.[category.id] ?? (parentId ? partTransforms?.[parentId] : undefined);
+
+    // faceOffset: 눈/코/입/볼 일괄 오프셋
+    const faceX = (isFaceMovable && faceOffset) ? faceOffset.x : 0;
+    const faceY = (isFaceMovable && faceOffset) ? faceOffset.y : 0;
 
     if (isSymmetric) {
       // Always split into left/right for symmetric categories (left-only images)
@@ -142,8 +149,8 @@ export function resolveLayers(
         categoryId: category.id,
         layerIndex: category.layerIndex,
         svgPath,
-        offsetX: userX,
-        offsetY: userY,
+        offsetX: userX + faceX,
+        offsetY: userY + faceY,
         rotate: userR,
         side: 'left',
       });
@@ -151,8 +158,8 @@ export function resolveLayers(
         categoryId: category.id,
         layerIndex: category.layerIndex,
         svgPath,
-        offsetX: -userX,
-        offsetY: userY,
+        offsetX: -userX + faceX,
+        offsetY: userY + faceY,
         rotate: -userR,
         side: 'right',
         flipX: true,
@@ -162,8 +169,8 @@ export function resolveLayers(
         categoryId: category.id,
         layerIndex: category.layerIndex,
         svgPath,
-        offsetX: 0,
-        offsetY: 0,
+        offsetX: faceX,
+        offsetY: faceY,
         rotate: 0,
       });
     }
@@ -180,8 +187,8 @@ export function resolveLayers(
             categoryId: category.id,
             layerIndex: extra.layerIndex,
             svgPath: extra.svgPath,
-            offsetX: userX,
-            offsetY: userY,
+            offsetX: userX + faceX,
+            offsetY: userY + faceY,
             rotate: userR,
             side: 'left',
             isExtra: true,
@@ -191,8 +198,8 @@ export function resolveLayers(
             categoryId: category.id,
             layerIndex: extra.layerIndex,
             svgPath: extra.svgPath,
-            offsetX: -userX,
-            offsetY: userY,
+            offsetX: -userX + faceX,
+            offsetY: userY + faceY,
             rotate: -userR,
             side: 'right',
             flipX: true,
@@ -204,8 +211,8 @@ export function resolveLayers(
             categoryId: category.id,
             layerIndex: extra.layerIndex,
             svgPath: extra.svgPath,
-            offsetX: 0,
-            offsetY: 0,
+            offsetX: faceX,
+            offsetY: faceY,
             rotate: 0,
             isExtra: true,
             fixedColor: extra.fixedColor,
@@ -281,9 +288,10 @@ export function resolveLayersForDirection(
   poseId: PoseId,
   expressionId: ExpressionId,
   partTransforms: PartTransforms | undefined,
-  direction: ViewDirection
+  direction: ViewDirection,
+  faceOffset?: FaceOffset
 ): ResolvedLayer[] {
-  const allLayers = resolveLayers(selectedParts, poseId, expressionId, partTransforms);
+  const allLayers = resolveLayers(selectedParts, poseId, expressionId, partTransforms, faceOffset);
   const hiddenCategories = HIDDEN_CATEGORIES_BY_DIRECTION[direction];
 
   const categoryFiltered = hiddenCategories.length === 0

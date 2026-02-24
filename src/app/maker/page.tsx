@@ -11,9 +11,11 @@ import { EditModeModal } from '@/components/maker/EditModeModal';
 import { ColorPalette } from '@/components/maker/ColorPalette';
 import { StrokeSettingsPanel } from '@/components/maker/StrokeSettingsPanel';
 import { DirectionGrid } from '@/components/maker/DirectionGrid';
+import { DraggableCharacterPreview } from '@/components/maker/DraggableCharacterPreview';
 import { ActionPresetGrid } from '@/components/maker/ActionPresetGrid';
 import { PoseSelector } from '@/components/maker/PoseSelector';
 import { ExpressionSelector } from '@/components/maker/ExpressionSelector';
+import { SnapshotGrid } from '@/components/maker/SnapshotGrid';
 import { Button } from '@/components/ui/Button';
 import { useCharacterStore } from '@/stores/character-store';
 import { POSE_MAP, EXPRESSION_MAP } from '@/data/poses-expressions';
@@ -60,6 +62,7 @@ export default function MakerPage() {
 
     return (
       <div className="flex flex-col gap-6">
+        <SnapshotGrid />
         <div className="flex items-center justify-between">
           <Button variant="secondary" onClick={() => setStep('parts')} className="gap-2">
             <ArrowLeft className="h-4 w-4" />
@@ -75,7 +78,7 @@ export default function MakerPage() {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_400px]">
           {/* Preview */}
           <div className="flex flex-col gap-4 lg:order-2">
-            <CharacterPreview className="w-full lg:sticky lg:top-20" poseId={activePoseId} expressionId={activeExpressionId} />
+            <DraggableCharacterPreview className="w-full lg:sticky lg:top-20" poseId={activePoseId} expressionId={activeExpressionId} />
             <p className="text-center text-sm text-gray-500">
               현재: <span className="font-medium text-gray-700">{poseName}</span> / <span className="font-medium text-gray-700">{expressionName}</span>
             </p>
@@ -101,6 +104,7 @@ export default function MakerPage() {
   // Parts step (default)
   return (
     <div className="flex flex-col gap-6">
+      <SnapshotGrid />
       {/* Top bar */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">캐릭터 만들기</h2>

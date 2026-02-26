@@ -3,7 +3,7 @@ import { DEFAULT_FILL_COLOR, DEFAULT_STROKE_COLOR, DEFAULT_STROKE_SETTINGS } fro
 import { loadSvgText } from './svg-loader';
 import { replaceFillColor, replaceStrokeColor, replaceStrokeWidth, svgToDataUri } from './svg-colorizer';
 import { applyStrokeTexture } from './svg-texture';
-import { COLORABLE_CATEGORIES, DEFAULT_EYES_COLOR, MOUTH_FOLLOWS, STROKE_WIDTH_PRESETS } from '@/lib/utils/constants';
+import { COLORABLE_CATEGORIES, MOUTH_FOLLOWS, STROKE_WIDTH_PRESETS } from '@/lib/utils/constants';
 import { PARTS } from '@/data/parts';
 
 const DEFAULT_PART_COLOR: PartColor = { fill: DEFAULT_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR };
@@ -33,28 +33,28 @@ function resolveColor(
   categoryId: string,
   partColors: PartColors,
   isColorable?: boolean
-): { fill: string; stroke: string; skipStroke: boolean; preserveNone: boolean } {
+): { fill: string; stroke: string; skipFill: boolean; skipStroke: boolean; preserveNone: boolean } {
   const preserveNone = PRESERVE_NONE_CATEGORIES.includes(categoryId);
 
   if (categoryId === 'eyes') {
-    return { fill: DEFAULT_EYES_COLOR, stroke: DEFAULT_STROKE_COLOR, skipStroke: true, preserveNone };
+    return { fill: '', stroke: '', skipFill: true, skipStroke: true, preserveNone };
   }
 
   if (categoryId === 'mouth') {
     if (isColorable) {
       const color = partColors['mouth'] ?? DEFAULT_PART_COLOR;
-      return { fill: color.fill, stroke: color.stroke, skipStroke: false, preserveNone };
+      return { fill: color.fill, stroke: color.stroke, skipFill: false, skipStroke: false, preserveNone };
     }
     const bodyColor = partColors[MOUTH_FOLLOWS] ?? DEFAULT_PART_COLOR;
-    return { fill: bodyColor.fill, stroke: DEFAULT_STROKE_COLOR, skipStroke: false, preserveNone };
+    return { fill: bodyColor.fill, stroke: DEFAULT_STROKE_COLOR, skipFill: false, skipStroke: false, preserveNone };
   }
 
   if (COLORABLE_CATEGORIES.includes(categoryId as never)) {
     const color = partColors[categoryId as keyof PartColors] ?? DEFAULT_PART_COLOR;
-    return { fill: color.fill, stroke: color.stroke, skipStroke: false, preserveNone };
+    return { fill: color.fill, stroke: color.stroke, skipFill: false, skipStroke: false, preserveNone };
   }
 
-  return { fill: DEFAULT_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, skipStroke: false, preserveNone };
+  return { fill: DEFAULT_FILL_COLOR, stroke: DEFAULT_STROKE_COLOR, skipFill: false, skipStroke: false, preserveNone };
 }
 
 /**
@@ -91,13 +91,15 @@ export async function applyColorsToLayers(
       }
 
       const colorable = isPartColorable(layer.categoryId, selectedParts);
-      const { fill, stroke, skipStroke, preserveNone } = resolveColor(layer.categoryId, partColors, colorable);
+      const { fill, stroke, skipFill, skipStroke, preserveNone } = resolveColor(layer.categoryId, partColors, colorable);
 
       try {
         let svgText = await loadSvgText(layer.svgPath);
 
         // 1. Apply fill color
-        svgText = replaceFillColor(svgText, fill, preserveNone);
+        if (!skipFill) {
+          svgText = replaceFillColor(svgText, fill, preserveNone);
+        }
 
         // 2. Apply stroke color
         if (!skipStroke) {

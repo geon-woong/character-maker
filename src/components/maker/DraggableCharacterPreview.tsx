@@ -63,13 +63,14 @@ export function DraggableCharacterPreview({ className, poseId, expressionId }: D
   const strokeSettings = useCharacterStore((s) => s.strokeSettings);
   const setFaceOffset = useCharacterStore((s) => s.setFaceOffset);
   const resetFaceOffset = useCharacterStore((s) => s.resetFaceOffset);
+  const expressionLocks = useCharacterStore((s) => s.expressionLocks);
 
   const effectivePoseId = poseId ?? 'standing';
   const effectiveExpressionId = expressionId ?? 'neutral';
 
   const baseLayers = useMemo(
-    () => resolveLayersForDirection(selectedParts, effectivePoseId, effectiveExpressionId, partTransforms, 'front', faceOffset),
-    [selectedParts, effectivePoseId, effectiveExpressionId, partTransforms, faceOffset]
+    () => resolveLayersForDirection(selectedParts, effectivePoseId, effectiveExpressionId, partTransforms, 'front', faceOffset, expressionLocks),
+    [selectedParts, effectivePoseId, effectiveExpressionId, partTransforms, faceOffset, expressionLocks]
   );
 
   useEffect(() => {

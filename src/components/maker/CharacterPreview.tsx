@@ -52,13 +52,14 @@ export function CharacterPreview({ className, poseId, expressionId }: CharacterP
   const partColors = useCharacterStore((s) => s.partColors);
   const faceOffset = useCharacterStore((s) => s.faceOffset);
   const strokeSettings = useCharacterStore((s) => s.strokeSettings);
+  const expressionLocks = useCharacterStore((s) => s.expressionLocks);
 
   const effectivePoseId = poseId ?? DEFAULT_POSE_ID;
   const effectiveExpressionId = expressionId ?? DEFAULT_EXPRESSION_ID;
 
   const baseLayers = useMemo(
-    () => resolveLayersForDirection(selectedParts, effectivePoseId, effectiveExpressionId, partTransforms, 'front', faceOffset),
-    [selectedParts, effectivePoseId, effectiveExpressionId, partTransforms, faceOffset]
+    () => resolveLayersForDirection(selectedParts, effectivePoseId, effectiveExpressionId, partTransforms, 'front', faceOffset, expressionLocks),
+    [selectedParts, effectivePoseId, effectiveExpressionId, partTransforms, faceOffset, expressionLocks]
   );
 
   useEffect(() => {

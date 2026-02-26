@@ -35,6 +35,7 @@ interface CharacterState {
   activePoseId: PoseId;
   activeExpressionId: ExpressionId;
   activeActionId: string | null;
+  expressionLocks: Partial<Record<CategoryId, boolean>>;
   strokeSettings: StrokeSettings;
   faceOffset: FaceOffset;
   recentFillColors: string[];
@@ -57,6 +58,7 @@ interface CharacterState {
   setPose: (poseId: PoseId) => void;
   setExpression: (expressionId: ExpressionId) => void;
   setAction: (actionId: string) => void;
+  toggleExpressionLock: (categoryId: CategoryId) => void;
   setFaceOffset: (offset: FaceOffset) => void;
   resetFaceOffset: () => void;
   loadSnapshot: (snapshot: SnapshotState) => void;
@@ -77,6 +79,7 @@ export const useCharacterStore = create<CharacterState>()(
       activePoseId: 'standing',
       activeExpressionId: 'neutral',
       activeActionId: null,
+      expressionLocks: {},
       faceOffset: DEFAULT_FACE_OFFSET,
       strokeSettings: DEFAULT_STROKE_SETTINGS,
       recentFillColors: [],
@@ -219,6 +222,7 @@ export const useCharacterStore = create<CharacterState>()(
           activePoseId: 'standing',
           activeExpressionId: 'neutral',
           activeActionId: null,
+          expressionLocks: {},
           strokeSettings: DEFAULT_STROKE_SETTINGS,
         }),
 
@@ -237,6 +241,17 @@ export const useCharacterStore = create<CharacterState>()(
           activeActionId: actionId,
         });
       },
+
+      toggleExpressionLock: (categoryId) =>
+        set((state) => {
+          const next = { ...state.expressionLocks };
+          if (next[categoryId]) {
+            delete next[categoryId];
+          } else {
+            next[categoryId] = true;
+          }
+          return { expressionLocks: next };
+        }),
 
       setStrokeWidth: (widthId) =>
         set((state) => ({
@@ -259,6 +274,7 @@ export const useCharacterStore = create<CharacterState>()(
           faceOffset: snapshot.faceOffset,
           activePoseId: snapshot.activePoseId,
           activeExpressionId: snapshot.activeExpressionId,
+          expressionLocks: snapshot.expressionLocks ?? {},
           strokeSettings: snapshot.strokeSettings,
           activeActionId: null,
         }),
@@ -275,7 +291,7 @@ export const useCharacterStore = create<CharacterState>()(
     }),
     {
       name: 'character-maker-state',
-      version: 12,
+      version: 13,
       storage: createJSONStorage(() => sessionStorage),
       migrate: (persistedState, version) => {
         const state = persistedState as Record<string, unknown>;
@@ -352,6 +368,9 @@ export const useCharacterStore = create<CharacterState>()(
         if (version < 12) {
           return { ...state, faceOffset: { x: 0, y: 0 } };
         }
+        if (version < 13) {
+          return { ...state, expressionLocks: {} };
+        }
         return state as unknown as CharacterState;
       },
       partialize: (state) => ({
@@ -365,6 +384,7 @@ export const useCharacterStore = create<CharacterState>()(
         activePoseId: state.activePoseId,
         activeExpressionId: state.activeExpressionId,
         activeActionId: state.activeActionId,
+        expressionLocks: state.expressionLocks,
         strokeSettings: state.strokeSettings,
         recentFillColors: state.recentFillColors,
         recentStrokeColors: state.recentStrokeColors,

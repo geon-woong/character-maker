@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { SelectedParts, PartTransforms, PartColors, FaceOffset, PoseId, ExpressionId, StrokeSettings } from '@/types/character';
+import type { SelectedParts, PartTransforms, PartColors, FaceOffset, PoseId, ExpressionId, CategoryId, StrokeSettings } from '@/types/character';
 
 const MAX_SNAPSHOTS = 8;
 
@@ -13,6 +13,7 @@ export interface SnapshotState {
   faceOffset: FaceOffset;
   activePoseId: PoseId;
   activeExpressionId: ExpressionId;
+  expressionLocks?: Partial<Record<CategoryId, boolean>>;
   strokeSettings: StrokeSettings;
 }
 

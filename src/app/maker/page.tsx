@@ -38,6 +38,7 @@ export default function MakerPage() {
   if (step === 'direction') {
     return (
       <div className="flex flex-col gap-6">
+        <SnapshotGrid />
         <div className="flex items-center justify-between">
           <Button variant="secondary" onClick={() => setStep('action')} className="gap-2">
             <ArrowLeft className="h-4 w-4" />

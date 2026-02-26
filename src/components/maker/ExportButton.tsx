@@ -47,6 +47,7 @@ export function ExportButton() {
   const activePoseId = useCharacterStore((s) => s.activePoseId);
   const activeExpressionId = useCharacterStore((s) => s.activeExpressionId);
   const faceOffset = useCharacterStore((s) => s.faceOffset);
+  const expressionLocks = useCharacterStore((s) => s.expressionLocks);
 
   const activePreset: ExportPreset = useMemo(
     () => EXPORT_PRESETS.find((p) => p.id === presetId) ?? EXPORT_PRESETS[1]!,
@@ -67,7 +68,8 @@ export function ExportButton() {
         activeExpressionId,
         partTransforms,
         activeDirection,
-        faceOffset
+        faceOffset,
+        expressionLocks
       );
       const layers = await applyColorsToLayers(baseLayers, partColors, strokeSettings, selectedParts);
 

@@ -22,7 +22,8 @@ async function generateThumbnail(state: SnapshotState): Promise<string> {
     state.activeExpressionId,
     state.partTransforms,
     'front',
-    state.faceOffset
+    state.faceOffset,
+    state.expressionLocks
   );
   const layers = await applyColorsToLayers(
     baseLayers,
@@ -48,6 +49,7 @@ export function SnapshotGrid() {
   const faceOffset = useCharacterStore((s) => s.faceOffset);
   const activePoseId = useCharacterStore((s) => s.activePoseId);
   const activeExpressionId = useCharacterStore((s) => s.activeExpressionId);
+  const expressionLocks = useCharacterStore((s) => s.expressionLocks);
   const strokeSettings = useCharacterStore((s) => s.strokeSettings);
 
   const blobUrlsRef = useRef<Set<string>>(new Set());
@@ -85,6 +87,7 @@ export function SnapshotGrid() {
       faceOffset,
       activePoseId,
       activeExpressionId,
+      expressionLocks,
       strokeSettings,
     };
 
@@ -101,7 +104,7 @@ export function SnapshotGrid() {
     } catch {
       toast.error('저장 중 오류가 발생했습니다.');
     }
-  }, [selectedParts, partTransforms, partColors, faceOffset, activePoseId, activeExpressionId, strokeSettings, saveSnapshot]);
+  }, [selectedParts, partTransforms, partColors, faceOffset, activePoseId, activeExpressionId, expressionLocks, strokeSettings, saveSnapshot]);
 
   const handleLoad = useCallback((state: SnapshotState) => {
     if (!window.confirm('현재 작업이 사라집니다. 불러오시겠습니까?')) return;

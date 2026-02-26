@@ -15,6 +15,7 @@ import type {
 } from '@/types/character';
 import { CATEGORIES } from '@/data/categories';
 import { PARTS } from '@/data/parts';
+import { EXPRESSION_EFFECTS } from '@/data/expression-effects';
 import { EDITABLE_CATEGORIES, SYMMETRIC_CATEGORIES, TRANSFORM_PARENT, HIDDEN_CATEGORIES_BY_DIRECTION, HIDDEN_SIDES_BY_DIRECTION, FACE_MOVABLE_CATEGORIES } from '@/lib/utils/constants';
 
 /**
@@ -108,7 +109,8 @@ export function resolveLayers(
   poseId: PoseId,
   expressionId: ExpressionId,
   partTransforms?: PartTransforms,
-  faceOffset?: FaceOffset
+  faceOffset?: FaceOffset,
+  expressionLocks?: Partial<Record<CategoryId, boolean>>
 ): ResolvedLayer[] {
   const layers: ResolvedLayer[] = [];
 
@@ -122,12 +124,21 @@ export function resolveLayers(
     const part = categoryParts.find((p) => p.id === partId);
     if (!part) continue;
 
-    const variantKey = resolveVariantKey(part, poseId, expressionId);
+    // Per-category expression: locked categories stay at 'neutral'
+    const effectiveExpression = expressionLocks?.[category.id] ? 'neutral' as ExpressionId : expressionId;
+
+    const variantKey = resolveVariantKey(part, poseId, effectiveExpression);
     if (!variantKey) continue;
 
     const variantValue = part.variants[variantKey];
     if (!variantValue) continue;
-    const { svgPath, extraLayers } = parseVariantValue(variantValue);
+    const { svgPath: baseSvgPath, extraLayers } = parseVariantValue(variantValue);
+
+    // Apply category-level expression effect (replace swaps svgPath, overlay adds layers later)
+    const effect = effectiveExpression !== 'neutral'
+      ? EXPRESSION_EFFECTS[category.id]?.[effectiveExpression]
+      : undefined;
+    const svgPath = (effect?.mode === 'replace') ? effect.svgPath : baseSvgPath;
 
     const isSymmetric = SYMMETRIC_CATEGORIES.includes(category.id);
     const isEditable = EDITABLE_CATEGORIES.includes(category.id);
@@ -175,49 +186,52 @@ export function resolveLayers(
       });
     }
 
-    // Process extra layers for composite parts
-    if (extraLayers) {
-      for (const extra of extraLayers) {
-        if (isSymmetric) {
-          const userX = (isEditable && transform) ? transform.x : 0;
-          const userY = (isEditable && transform) ? transform.y : 0;
-          const userR = (isEditable && transform) ? transform.rotate : 0;
+    // Process extra layers for composite parts (variant-level + expression overlays)
+    const allExtraLayers = [
+      ...(extraLayers ?? []),
+      ...((effect?.mode === 'overlay') ? effect.extraLayers : []),
+    ];
 
-          layers.push({
-            categoryId: category.id,
-            layerIndex: extra.layerIndex,
-            svgPath: extra.svgPath,
-            offsetX: userX + faceX,
-            offsetY: userY + faceY,
-            rotate: userR,
-            side: 'left',
-            isExtra: true,
-            fixedColor: extra.fixedColor,
-          });
-          layers.push({
-            categoryId: category.id,
-            layerIndex: extra.layerIndex,
-            svgPath: extra.svgPath,
-            offsetX: -userX + faceX,
-            offsetY: userY + faceY,
-            rotate: -userR,
-            side: 'right',
-            flipX: true,
-            isExtra: true,
-            fixedColor: extra.fixedColor,
-          });
-        } else {
-          layers.push({
-            categoryId: category.id,
-            layerIndex: extra.layerIndex,
-            svgPath: extra.svgPath,
-            offsetX: faceX,
-            offsetY: faceY,
-            rotate: 0,
-            isExtra: true,
-            fixedColor: extra.fixedColor,
-          });
-        }
+    for (const extra of allExtraLayers) {
+      if (isSymmetric) {
+        const userX = (isEditable && transform) ? transform.x : 0;
+        const userY = (isEditable && transform) ? transform.y : 0;
+        const userR = (isEditable && transform) ? transform.rotate : 0;
+
+        layers.push({
+          categoryId: category.id,
+          layerIndex: extra.layerIndex,
+          svgPath: extra.svgPath,
+          offsetX: userX + faceX,
+          offsetY: userY + faceY,
+          rotate: userR,
+          side: 'left',
+          isExtra: true,
+          fixedColor: extra.fixedColor,
+        });
+        layers.push({
+          categoryId: category.id,
+          layerIndex: extra.layerIndex,
+          svgPath: extra.svgPath,
+          offsetX: -userX + faceX,
+          offsetY: userY + faceY,
+          rotate: -userR,
+          side: 'right',
+          flipX: true,
+          isExtra: true,
+          fixedColor: extra.fixedColor,
+        });
+      } else {
+        layers.push({
+          categoryId: category.id,
+          layerIndex: extra.layerIndex,
+          svgPath: extra.svgPath,
+          offsetX: faceX,
+          offsetY: faceY,
+          rotate: 0,
+          isExtra: true,
+          fixedColor: extra.fixedColor,
+        });
       }
     }
   }
@@ -289,9 +303,10 @@ export function resolveLayersForDirection(
   expressionId: ExpressionId,
   partTransforms: PartTransforms | undefined,
   direction: ViewDirection,
-  faceOffset?: FaceOffset
+  faceOffset?: FaceOffset,
+  expressionLocks?: Partial<Record<CategoryId, boolean>>
 ): ResolvedLayer[] {
-  const allLayers = resolveLayers(selectedParts, poseId, expressionId, partTransforms, faceOffset);
+  const allLayers = resolveLayers(selectedParts, poseId, expressionId, partTransforms, faceOffset, expressionLocks);
   const hiddenCategories = HIDDEN_CATEGORIES_BY_DIRECTION[direction];
 
   const categoryFiltered = hiddenCategories.length === 0

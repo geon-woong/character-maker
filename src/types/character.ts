@@ -48,6 +48,13 @@ export interface Action {
   readonly category: ActionCategory;
 }
 
+// ===== Expression Effect =====
+
+/** Expression effect applied at the category level (shared across all parts) */
+export type ExpressionEffect =
+  | { readonly mode: 'overlay'; readonly extraLayers: readonly ExtraLayer[] }
+  | { readonly mode: 'replace'; readonly svgPath: string };
+
 // ===== Part =====
 
 /** Extra layer rendered at a different z-index (for composite parts) */

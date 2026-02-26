@@ -102,7 +102,7 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
     currentTransform.rotate === 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/60">
       <div className="relative flex h-[100dvh] w-screen flex-col bg-white lg:h-auto lg:max-h-[90vh] lg:w-auto lg:min-w-[520px] lg:max-w-[600px] lg:rounded-2xl">
         {/* 헤더 */}
         <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3">

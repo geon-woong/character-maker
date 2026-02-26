@@ -14,6 +14,7 @@ import {
   CANVAS_HEIGHT,
   CANVAS_EXPORT_SCALE,
 } from '@/lib/utils/constants';
+import { DEFAULT_FACE_OFFSET } from '@/types/character';
 
 type ExportPresetId = 'web' | 'standard' | 'hires';
 
@@ -46,7 +47,6 @@ export function ExportButton() {
   const activeDirection = useCharacterStore((s) => s.activeDirection);
   const activePoseId = useCharacterStore((s) => s.activePoseId);
   const activeExpressionId = useCharacterStore((s) => s.activeExpressionId);
-  const faceOffset = useCharacterStore((s) => s.faceOffset);
   const expressionLocks = useCharacterStore((s) => s.expressionLocks);
 
   const activePreset: ExportPreset = useMemo(
@@ -68,7 +68,7 @@ export function ExportButton() {
         activeExpressionId,
         partTransforms,
         activeDirection,
-        faceOffset,
+        DEFAULT_FACE_OFFSET,
         expressionLocks
       );
       const layers = await applyColorsToLayers(baseLayers, partColors, strokeSettings, selectedParts);

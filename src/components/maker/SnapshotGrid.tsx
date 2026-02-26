@@ -134,11 +134,14 @@ export function SnapshotGrid() {
   return (
     <div className="flex items-center gap-2 overflow-x-auto pb-1">
       {snapshots.map((snap) => (
-        <button
+        <div
           key={snap.id}
+          role="button"
+          tabIndex={0}
           onClick={() => handleLoad(snap.state)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleLoad(snap.state); }}
           className={cn(
-            'group relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 border-gray-200 transition-all',
+            'group relative h-14 w-14 shrink-0 cursor-pointer overflow-hidden rounded-lg border-2 border-gray-200 transition-all',
             'hover:border-indigo-400 hover:shadow-md'
           )}
         >
@@ -159,7 +162,7 @@ export function SnapshotGrid() {
           >
             <X className="h-2.5 w-2.5" />
           </button>
-        </button>
+        </div>
       ))}
 
       {snapshots.length < 8 && (

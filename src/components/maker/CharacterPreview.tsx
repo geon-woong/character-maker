@@ -6,6 +6,7 @@ import { useCharacterStore } from '@/stores/character-store';
 import { resolveLayersForDirection } from '@/lib/composer/layer-order';
 import { applyColorsToLayers } from '@/lib/color/apply-colors';
 import type { PoseId, ExpressionId, ResolvedLayer } from '@/types/character';
+import { DEFAULT_FACE_OFFSET } from '@/types/character';
 import { CANVAS_WIDTH, CANVAS_HEIGHT, DEFAULT_POSE_ID, DEFAULT_EXPRESSION_ID } from '@/lib/utils/constants';
 import { cn } from '@/lib/utils/cn';
 
@@ -50,7 +51,6 @@ export function CharacterPreview({ className, poseId, expressionId }: CharacterP
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
   const partColors = useCharacterStore((s) => s.partColors);
-  const faceOffset = useCharacterStore((s) => s.faceOffset);
   const strokeSettings = useCharacterStore((s) => s.strokeSettings);
   const expressionLocks = useCharacterStore((s) => s.expressionLocks);
 
@@ -58,8 +58,8 @@ export function CharacterPreview({ className, poseId, expressionId }: CharacterP
   const effectiveExpressionId = expressionId ?? DEFAULT_EXPRESSION_ID;
 
   const baseLayers = useMemo(
-    () => resolveLayersForDirection(selectedParts, effectivePoseId, effectiveExpressionId, partTransforms, 'front', faceOffset, expressionLocks),
-    [selectedParts, effectivePoseId, effectiveExpressionId, partTransforms, faceOffset, expressionLocks]
+    () => resolveLayersForDirection(selectedParts, effectivePoseId, effectiveExpressionId, partTransforms, 'front', DEFAULT_FACE_OFFSET, expressionLocks),
+    [selectedParts, effectivePoseId, effectiveExpressionId, partTransforms, expressionLocks]
   );
 
   useEffect(() => {

@@ -9,7 +9,7 @@ import { applyColorsToLayers } from '@/lib/color/apply-colors';
 import { CATEGORIES } from '@/data/categories';
 import { cn } from '@/lib/utils/cn';
 import type { ResolvedLayer } from '@/types/character';
-import { DEFAULT_SYMMETRIC_TRANSFORM } from '@/types/character';
+import { DEFAULT_SYMMETRIC_TRANSFORM, DEFAULT_FACE_OFFSET } from '@/types/character';
 import {
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
@@ -42,7 +42,6 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
   const selectedParts = useCharacterStore((s) => s.selectedParts);
   const partTransforms = useCharacterStore((s) => s.partTransforms);
   const partColors = useCharacterStore((s) => s.partColors);
-  const faceOffset = useCharacterStore((s) => s.faceOffset);
   const strokeSettings = useCharacterStore((s) => s.strokeSettings);
   const setSymmetricTransform = useCharacterStore((s) => s.setSymmetricTransform);
   const resetPartTransform = useCharacterStore((s) => s.resetPartTransform);
@@ -55,8 +54,8 @@ export function EditModeModal({ onClose }: EditModeModalProps) {
   const hasSelection = selectedParts[editCategoryId] != null;
 
   const baseLayers = useMemo(
-    () => resolveLayersForDirection(selectedParts, 'standing', 'neutral', partTransforms, 'front', faceOffset),
-    [selectedParts, partTransforms, faceOffset]
+    () => resolveLayersForDirection(selectedParts, 'standing', 'neutral', partTransforms, 'front', DEFAULT_FACE_OFFSET),
+    [selectedParts, partTransforms]
   );
 
   useEffect(() => {
